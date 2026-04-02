@@ -131,7 +131,7 @@ const Form = ({ onGenerate, loading, currentUser }) => {
               required
             >
               <option value="">Sélectionner admin</option>
-              <option value="OUATTARA KARIM">OUATTARA KARIM</option>
+              <option value="COULIBALY KARIM">COULIBALY KARIM</option>
               <option value="COULIBALY SITA">COULIBALY SITA</option>
             </select>
           </div>
