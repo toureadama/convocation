@@ -55,7 +55,7 @@ const CodeAgre = () => {
   };
 
   const handleDelete = async (cc) => {
-    if (!confirm(`Supprimer ${cc}?`)) return;
+    if (!window.confirm(`Supprimer ${cc}?`)) return;
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`/api/code_agree/${cc}`, {
@@ -66,7 +66,7 @@ const CodeAgre = () => {
         fetchCompanies();
       }
     } catch (err) {
-      alert('Erreur suppression');
+      window.alert('Erreur suppression');
     }
   };
 
