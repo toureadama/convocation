@@ -1,0 +1,102 @@
+.results-container {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+
+.results-container h2 {
+  margin-top: 0;
+  color: #333;
+  text-align: center;
+}
+
+.results-list {
+  max-height: 500px;
+  overflow-y: auto;
+  margin: 20px 0;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.result-item:hover {
+  background: #f8f9fa;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.file-info {
+  flex: 2;
+  padding-right: 20px;
+}
+
+.file-name {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c3e50;
+  word-break: break-word;
+  line-height: 1.3;
+  max-width: 400px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.preview-btn, .download-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.preview-btn {
+  background: #007bff;
+  color: white;
+}
+
+.preview-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.download-btn {
+  background: #28a745;
+  color: white;
+}
+
+.download-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.success {
+  background: #d4edda;
+  color: #155724;
+}
