@@ -8,13 +8,18 @@ from typing import Tuple
 
 import pandas as pd
 from docxtpl import DocxTemplate
-from docx2pdf import convert
+import subprocess
 
+BASE_DIR = Path(__file__).resolve().parent
 
 class ConvocationGenerator:
     def __init__(self, template_path: str = 'Convocation_modele.docx', output_dir: str = 'output'):
-        self.template_path = Path(template_path)
-        self.output_dir = Path(output_dir)
+        self.template_path = BASE_DIR / template_path
+        self.output_dir = BASE_DIR / output_dir
+        
+        #self.template_path = Path(template_path)
+        #self.output_dir = Path(output_dir)
+        
         self.output_dir.mkdir(exist_ok=True)
         self.doc = DocxTemplate(self.template_path)
 
@@ -64,7 +69,15 @@ class ConvocationGenerator:
 
         self.doc.save(docx_path)
         logging.info(f'Docx sauvé : {docx_path}')
-        convert(str(docx_path), str(pdf_path))
+        
+        subprocess.run([
+            "libreoffice",
+            "--headless",
+            "--convert-to", "pdf",
+            "--outdir", str(self.output_dir),
+            str(docx_path)
+        ], check=True)
+        
         logging.info(f'PDF généré : {pdf_path}')
         print(f'[1/1] OK : {pdf_path}')
         return str(docx_path), str(pdf_path)
