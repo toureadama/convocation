@@ -19,8 +19,10 @@ import bcrypt
 import logging
 import pandas as pd
 
+os.makedirs('output', exist_ok=True)
+
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'douanes-ci-super-secret-key-2024-32bytes-minimum-for-sha256-secure!'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-secret')
 jwt = JWTManager(app)
 CORS(app)
 
