@@ -574,6 +574,7 @@ def update_delete_code_agree(cc):
     conn.close()
     return jsonify({'error': 'Non trouvé'}), 404
 
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, port=5000, host='0.0.0.0')
