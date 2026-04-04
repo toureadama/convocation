@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './History.css';
 
-// ✅ Utiliser la variable d'environnement injectée au build
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL
 
 const History = ({ user }) => {
   const [history, setHistory] = useState([]);
