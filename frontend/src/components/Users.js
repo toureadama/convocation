@@ -16,7 +16,7 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/users', {
+      const res = await fetch('{API_URL}/api/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Erreur chargement');
@@ -33,7 +33,7 @@ const Users = () => {
     e.preventDefault();
     try {
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/users/${editingId}` : '/api/users';
+      const url = editingId ? `{API_URL}/api/users/${editingId}` : '{API_URL}/api/users';
       const token = localStorage.getItem('token');
       const res = await fetch(url, {
         method,
@@ -78,7 +78,7 @@ const Users = () => {
     }
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${user.id}/credentials`, {
+      const res = await fetch(`{API_URL}/api/users/${user.id}/credentials`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const Users = () => {
     if (!window.confirm('Supprimer utilisateur ?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${id}`, { 
+      const res = await fetch(`{API_URL}/api/users/${id}`, { 
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

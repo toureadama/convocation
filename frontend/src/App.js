@@ -18,7 +18,7 @@ function App() {
 
   useEffect(() => {
     if (token) {
-      fetch('/api/verify', {
+      fetch('{API_URL}/api/verify', {
         headers: { Authorization: `Bearer ${token}` },
       }).then(async res => {
         if (!res.ok) {
@@ -54,7 +54,7 @@ function App() {
 
     try {
       const params = new URLSearchParams(formData);
-      const response = await fetch('/api/generate', {
+      const response = await fetch('{API_URL}/api/generate', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/x-www-form-urlencoded',
