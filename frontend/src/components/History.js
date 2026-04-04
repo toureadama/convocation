@@ -36,7 +36,7 @@ const History = ({ user }) => {
     try {
       const token = localStorage.getItem('token');
       const query = buildQuery();
-      const res = await fetch(`{API_URL}/api/history?${query}`, {
+      const res = await fetch(`${API_URL}/api/history?${query}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch');
@@ -61,7 +61,7 @@ const History = ({ user }) => {
   const updateStatus = async (entryId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`{API_URL}/api/history/${entryId}/status`, {
+      const res = await fetch(`${API_URL}/api/history/${entryId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -183,7 +183,7 @@ const History = ({ user }) => {
                   </td>
                   <td>
 {(entry.filenames || '').split(';').filter(f => f).map((f, i) => (
-                      <a key={i} href={`{API_URL}/output/${f}`} target="_blank" rel="noopener noreferrer" className="download-link">
+                      <a key={i} href={`${API_URL}/output/${f}`} target="_blank" rel="noopener noreferrer" className="download-link">
                         {f}
                       </a>
                     ))}
@@ -198,7 +198,7 @@ const History = ({ user }) => {
                 onClick={async () => {
                   const token = localStorage.getItem('token');
                   const query = buildQuery().replace(/page=\d+&limit=\d+/, '');
-                  const url = `{API_URL}/api/history/export?${query}`;
+                  const url = `${API_URL}/api/history/export?${query}`;
                   const res = await fetch(url, {
                     headers: { Authorization: `Bearer ${token}` }
                   });

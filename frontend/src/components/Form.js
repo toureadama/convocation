@@ -35,7 +35,7 @@ const Form = ({ onGenerate, loading, currentUser }) => {
       setCompaniesLoading(false);
       return;
     }
-    fetch('{API_URL}/api/companies', {
+    fetch('${API_URL}/api/companies', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {

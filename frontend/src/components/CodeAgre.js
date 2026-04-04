@@ -17,7 +17,7 @@ const CodeAgre = () => {
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('{API_URL}/api/code_agree', {
+      const res = await fetch('${API_URL}/api/code_agree', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Erreur chargement');
@@ -34,7 +34,7 @@ const CodeAgre = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('{API_URL}/api/code_agree', {
+      const res = await fetch('${API_URL}/api/code_agree', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ const CodeAgre = () => {
     if (!window.confirm(`Supprimer ${cc}?`)) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`{API_URL}/api/code_agree/${cc}`, {
+      const res = await fetch(`${API_URL}/api/code_agree/${cc}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -114,7 +114,7 @@ const CodeAgre = () => {
                 <td>{company.cc}</td>
 <td><input value={company.societe} onChange={(e) => {
   const newSociete = e.target.value;
-  fetch(`{API_URL}/api/code_agree/${company.cc}`, {
+  fetch(`${API_URL}/api/code_agree/${company.cc}`, {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({societe: newSociete})
