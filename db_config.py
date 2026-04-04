@@ -2,13 +2,20 @@ import os
 import mysql.connector
 from mysql.connector import Error
 
+# ============================================================
+# Les credentials sont lus depuis les variables d'environnement
+# Définies dans secrets.env (local) ou dans Render > Environment
+# ============================================================
+
 CONFIG = {
-    'host': os.getenv('DB_HOST'),
-    'port': int(os.getenv('DB_PORT', 3306)),
-    'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PASSWORD'),
-    'database': os.getenv('DB_NAME'),
-    'charset': 'utf8mb4'
+    'host':     os.environ.get('DB_HOST', 'mysql-a54ef6c-toureadama-2bc0.c.aivencloud.com'),
+    'port':     int(os.environ.get('DB_PORT', 15107)),
+    'user':     os.environ.get('DB_USER', 'avnadmin'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'douanesci_convocation'),
+    'charset':  'utf8mb4',
+    # SSL requis par Aiven Cloud MySQL
+    'ssl_disabled': False,
 }
 
 def get_db_connection():

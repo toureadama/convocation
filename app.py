@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Serveur API Flask avec auth JWT + Users CRUD + Convocation MySQL
-Port 5000 - Frontend proxy OK - Connected to douanesci_convocation
+Render-ready: PORT dynamique, secrets depuis variables d'environnement
 """
 import os
 import re
@@ -21,41 +21,30 @@ import pandas as pd
 from db_config import get_db_connection, close_connection, CONFIG
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
+# ✅ JWT secret depuis variable d'environnement (obligatoire en production)
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 CORS(app)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def init_db():
-    """Idempotent init - CREATE IF NOT EXISTS already in migration script"""
     conn = get_db_connection()
     if not conn:
         logger.error("Cannot connect to MySQL for init_db")
         return
     cursor = conn.cursor()
+    # Vérifier que les tables existent
     cursor.execute("SHOW TABLES LIKE 'users'")
     if not cursor.fetchone():
         logger.error("Tables not found - run create_remote_db.py first")
-    cursor.close()
-    close_connection(conn)
-    logger.info("MySQL douanesci_convocation ready")
-
-def get_db_cursor(dictionary=False):
-    conn = get_db_connection()
-    if not conn:
-        return None
-    cursor = conn.cursor(dictionary=dictionary)
-    return conn, cursor
-
-def init_db():
-    conn = get_db_connection()
-    if not conn:
-        logger.error("Cannot connect to MySQL for init_db")
+        cursor.close()
+        close_connection(conn)
         return
-    cursor = conn.cursor()
-    # Check admin
+    # Créer admin par défaut si absent
     cursor.execute("SELECT COUNT(*) as count FROM users WHERE login='admin'")
     count = cursor.fetchone()[0]
     if count == 0:
@@ -69,6 +58,16 @@ def init_db():
         logger.info("Admin créé: admin/admin123")
     cursor.close()
     close_connection(conn)
+    logger.info("MySQL douanesci_convocation ready")
+
+
+def get_db_cursor(dictionary=False):
+    conn = get_db_connection()
+    if not conn:
+        return None, None
+    cursor = conn.cursor(dictionary=dictionary)
+    return conn, cursor
+
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -76,19 +75,20 @@ def health():
     close_connection(conn)
     return jsonify({'status': 'OK', 'db': 'MySQL douanesci_convocation'})
 
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     login_ = data.get('login')
     password = data.get('password')
-    
+
     conn, cursor = get_db_cursor(dictionary=True)
     if not conn:
         return jsonify({'error': 'DB connection failed'}), 500
     cursor.execute("SELECT * FROM users WHERE login=%s AND is_active=1", (login_,))
     user = cursor.fetchone()
     close_connection(conn)
-    
+
     if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
         access_token = create_access_token(
             identity=user['login'],
@@ -106,12 +106,14 @@ def login():
         })
     return jsonify({'error': 'Identifiants invalides'}), 401
 
+
 @app.route('/api/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
     current_user = get_jwt_identity()
     logger.info(f"Verify OK for {current_user}")
     return jsonify({'ok': True, 'user': current_user})
+
 
 @app.route('/api/users', methods=['GET'])
 @jwt_required()
@@ -124,6 +126,7 @@ def get_users():
     close_connection(conn)
     return jsonify({'users': users})
 
+
 @app.route('/api/users', methods=['POST'])
 @jwt_required()
 def create_user():
@@ -131,14 +134,14 @@ def create_user():
     nom = data['nom']
     prenom = data['prenom']
     grade = data['grade']
-    
+
     provided_login = data.get('login')
     provided_password = data.get('password')
-    
+
     conn, cursor = get_db_cursor()
     if not conn:
         return jsonify({'error': 'DB error'}), 500
-    
+
     if provided_login and provided_password:
         cursor.execute("SELECT id FROM users WHERE login=%s", (provided_login,))
         if cursor.fetchone():
@@ -159,7 +162,7 @@ def create_user():
         password = secrets.token_urlsafe(8)
 
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+
     civilite = data.get('civilite', '')
     cursor.execute(
         "INSERT INTO users (civilite, nom, prenom, grade, login, password_hash) VALUES (%s, %s, %s, %s, %s, %s)",
@@ -168,7 +171,7 @@ def create_user():
     user_id = cursor.lastrowid
     conn.commit()
     close_connection(conn)
-    
+
     logger.info(f"User créé: {login}/{password}")
     return jsonify({
         'id': user_id,
@@ -177,24 +180,25 @@ def create_user():
         'message': 'Utilisateur créé'
     }), 201
 
+
 @app.route('/api/users/<int:user_id>/credentials', methods=['PUT'])
 @jwt_required()
 def update_credentials(user_id):
     data = request.get_json()
     new_login = data['login']
     new_password = data['password']
-    
+
     conn, cursor = get_db_cursor()
     if not conn:
         return jsonify({'error': 'DB error'}), 500
-    
+
     cursor.execute("SELECT id FROM users WHERE login=%s AND id != %s", (new_login, user_id))
     if cursor.fetchone():
         close_connection(conn)
         return jsonify({'error': 'Login déjà utilisé'}), 400
-    
+
     password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+
     cursor.execute(
         "UPDATE users SET login=%s, password_hash=%s WHERE id=%s AND is_active=1",
         (new_login, password_hash, user_id)
@@ -204,9 +208,10 @@ def update_credentials(user_id):
         return jsonify({'error': 'User non trouvé'}), 404
     conn.commit()
     close_connection(conn)
-    
+
     logger.info(f"Identifiants modifiés pour user_id {user_id}")
     return jsonify({'message': 'Identifiants mis à jour'})
+
 
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -227,14 +232,14 @@ def update_user(user_id):
     close_connection(conn)
     return jsonify({'message': 'User mis à jour'})
 
+
 @app.route('/api/history/<int:history_id>/status', methods=['PUT'])
 @jwt_required()
 def update_history_status(history_id):
     data = request.get_json()
     new_statut = data['statut']
-    
     current_user = get_jwt_identity()
-    
+
     conn, cursor = get_db_cursor()
     if not conn:
         return jsonify({'error': 'DB error'}), 500
@@ -242,15 +247,13 @@ def update_history_status(history_id):
         "UPDATE history SET statut = %s WHERE id = %s AND user_login = %s",
         (new_statut, history_id, current_user)
     )
-    
     if cursor.rowcount == 0:
         close_connection(conn)
         return jsonify({'error': 'Non autorisé ou non trouvé'}), 403
-    
     conn.commit()
     close_connection(conn)
-    
     return jsonify({'message': 'Statut mis à jour'})
+
 
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 @jwt_required()
@@ -266,6 +269,7 @@ def delete_user(user_id):
     close_connection(conn)
     return jsonify({'message': 'User supprimé'})
 
+
 @app.route('/api/generate', methods=['POST'])
 @jwt_required()
 def generate_convocation():
@@ -274,7 +278,6 @@ def generate_convocation():
         current_user = get_jwt_identity()
         logger.info(f"[{current_user}] Génération: {data}")
 
-        # Calcul next_num dynamique par user/année
         conn, cursor = get_db_cursor()
         if not conn:
             return jsonify({'error': 'DB error'}), 500
@@ -287,9 +290,9 @@ def generate_convocation():
         next_num = f"{int(count) + 1:04d}"
         logger.info(f"[{current_user}] Next num_convoc {current_year}: {next_num} (count={count})")
         close_connection(conn)
-        
+
         args_list = [
-sys.executable, os.path.join(os.getcwd(), 'convocation_mysql.py'),
+            sys.executable, 'convocation_mysql.py',
             '--cc', data['cc'],
             '--verificateur', data['verificateur'],
             '--num_declaration', data['num_declaration'],
@@ -299,24 +302,29 @@ sys.executable, os.path.join(os.getcwd(), 'convocation_mysql.py'),
             '--num_convoc', next_num,
         ]
 
+        # Passer les variables d'environnement DB au sous-processus
+        env = os.environ.copy()
+
         result = subprocess.run(
             args_list,
             capture_output=True,
             text=True,
             cwd=os.getcwd(),
             timeout=60,
+            env=env,
         )
 
         if result.returncode != 0:
             logger.error(f'Subprocess failed: {result.stderr}')
             return jsonify({'error': result.stderr}), 500
-        
+
         stdout_normalized = result.stdout.replace('\\', '/')
-        logger.info(f"stdout tail: {repr(stdout_normalized.splitlines()[-3:])}")  
-        pdf_matches = re.findall(r'OK\\s*:\\s*(output/[^\s\r\n]+)', stdout_normalized)
+        logger.info(f"stdout tail: {repr(stdout_normalized.splitlines()[-3:])}")
+        # ✅ Correction du regex (backslash dans raw string)
+        pdf_matches = re.findall(r'OK\s*:\s*(output/[^\s\r\n]+)', stdout_normalized)
         results = [{'path': match.strip(), 'filename': os.path.basename(match)} for match in pdf_matches]
         logger.info(f"Parsed {len(results)} files: {pdf_matches}")
-        
+
         conn, cursor = get_db_cursor()
         if not conn:
             return jsonify({'error': 'DB error'}), 500
@@ -337,7 +345,7 @@ sys.executable, os.path.join(os.getcwd(), 'convocation_mysql.py'),
         )
         conn.commit()
         close_connection(conn)
-        
+
         return jsonify({
             'success': True,
             'results': results,
@@ -350,6 +358,7 @@ sys.executable, os.path.join(os.getcwd(), 'convocation_mysql.py'),
         logger.error(f"Erreur: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/companies', methods=['GET'])
 @jwt_required()
 def get_companies():
@@ -361,74 +370,65 @@ def get_companies():
     close_connection(conn)
     return jsonify({'companies': companies})
 
+
 @app.route('/api/history/export', methods=['GET'])
 @jwt_required()
 def export_history():
     current_user = get_jwt_identity()
     if current_user != 'admin':
         return jsonify({'error': 'Admin only'}), 403
-    
+
     conn, cursor = get_db_cursor(dictionary=True)
     if not conn:
         return jsonify({'error': 'DB error'}), 500
-    
+
     where_conditions = []
     params = []
-    
-    filter_date_from = request.args.get('filter_date_from')
-    filter_date_to = request.args.get('filter_date_to')
-    filter_cc = request.args.get('filter_cc')
-    filter_verif = request.args.get('filter_verif')
-    filter_fraude = request.args.get('filter_fraude')
-    filter_admin = request.args.get('filter_admin')
+
+    for arg, col, op in [
+        ('filter_date_from', 'timestamp', '>='),
+        ('filter_date_to',   'timestamp', '<='),
+        ('filter_cc',        'cc',        'LIKE'),
+        ('filter_verif',     'verificateur', 'LIKE'),
+        ('filter_fraude',    'fraude',    'LIKE'),
+        ('filter_admin',     'signature_admin', 'LIKE'),
+    ]:
+        val = request.args.get(arg)
+        if val:
+            if op == 'LIKE':
+                where_conditions.append(f"{col} LIKE %s")
+                params.append(f"%{val}%")
+            else:
+                where_conditions.append(f"{col} {op} %s")
+                params.append(val)
+
     filter_statut = request.args.get('filter_statut')
-    
-    if filter_date_from:
-        where_conditions.append("timestamp >= %s")
-        params.append(filter_date_from)
-    if filter_date_to:
-        where_conditions.append("timestamp <= %s")
-        params.append(filter_date_to)
-    if filter_cc:
-        where_conditions.append("cc LIKE %s")
-        params.append(f"%{filter_cc}%")
-    if filter_verif:
-        where_conditions.append("verificateur LIKE %s")
-        params.append(f"%{filter_verif}%")
-    if filter_fraude:
-        where_conditions.append("fraude LIKE %s")
-        params.append(f"%{filter_fraude}%")
-    if filter_admin:
-        where_conditions.append("signature_admin LIKE %s")
-        params.append(f"%{filter_admin}%")
     if filter_statut:
         where_conditions.append("statut = %s")
         params.append(filter_statut)
-    
+
     where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-    
     query = f"""
-        SELECT id, timestamp, verificateur, num_declaration, date_declaration, 
+        SELECT id, timestamp, verificateur, num_declaration, date_declaration,
                fraude, signature_admin, cc, num_generated, filenames, user_login, statut
         FROM history {where_clause}
         ORDER BY timestamp DESC
     """
-    
     cursor.execute(query, params)
     rows = [dict(row) for row in cursor.fetchall()]
     close_connection(conn)
-    
+
     df = pd.DataFrame(rows)
     csv_buffer = df.to_csv(index=False, encoding='utf-8-sig')
-    
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"history_{timestamp}.csv"
-    
+
     return Response(
         csv_buffer,
         mimetype="text/csv",
         headers={"Content-disposition": f"attachment; filename={filename}"}
     )
+
 
 @app.route('/api/history', methods=['GET'])
 @jwt_required()
@@ -436,69 +436,60 @@ def get_history():
     page = int(request.args.get('page', 0))
     limit = int(request.args.get('limit', 20))
     offset = page * limit
-    
+
     current_user = get_jwt_identity()
     conn, cursor = get_db_cursor(dictionary=True)
     if not conn:
         return jsonify({'history': []}), 200
-    
+
     where_conditions = []
     params = []
-    
+
     if current_user != 'admin':
         where_conditions.append("user_login = %s")
         params.append(current_user)
     else:
-        filter_date_from = request.args.get('filter_date_from')
-        filter_date_to = request.args.get('filter_date_to')
-        filter_cc = request.args.get('filter_cc')
-        filter_verif = request.args.get('filter_verif')
-        filter_fraude = request.args.get('filter_fraude')
-        filter_admin = request.args.get('filter_admin')
+        for arg, col, op in [
+            ('filter_date_from', 'timestamp', '>='),
+            ('filter_date_to',   'timestamp', '<='),
+            ('filter_cc',        'cc',        'LIKE'),
+            ('filter_verif',     'verificateur', 'LIKE'),
+            ('filter_fraude',    'fraude',    'LIKE'),
+            ('filter_admin',     'signature_admin', 'LIKE'),
+        ]:
+            val = request.args.get(arg)
+            if val:
+                if op == 'LIKE':
+                    where_conditions.append(f"{col} LIKE %s")
+                    params.append(f"%{val}%")
+                else:
+                    where_conditions.append(f"{col} {op} %s")
+                    params.append(val)
+
         filter_statut = request.args.get('filter_statut')
-        
-        if filter_date_from:
-            where_conditions.append("timestamp >= %s")
-            params.append(filter_date_from)
-        if filter_date_to:
-            where_conditions.append("timestamp <= %s")
-            params.append(filter_date_to)
-        if filter_cc:
-            where_conditions.append("cc LIKE %s")
-            params.append(f"%{filter_cc}%")
-        if filter_verif:
-            where_conditions.append("verificateur LIKE %s")
-            params.append(f"%{filter_verif}%")
-        if filter_fraude:
-            where_conditions.append("fraude LIKE %s")
-            params.append(f"%{filter_fraude}%")
-        if filter_admin:
-            where_conditions.append("signature_admin LIKE %s")
-            params.append(f"%{filter_admin}%")
         if filter_statut:
             where_conditions.append("statut = %s")
             params.append(filter_statut)
-    
+
     where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-    
     query = f"""
-        SELECT id, timestamp, verificateur, num_declaration, date_declaration, 
+        SELECT id, timestamp, verificateur, num_declaration, date_declaration,
                fraude, signature_admin, cc, num_generated, filenames, user_login, statut
         FROM history {where_clause}
         ORDER BY timestamp DESC LIMIT %s OFFSET %s
     """
-    
     params.extend([limit, offset])
     cursor.execute(query, params)
-    
     rows = [dict(row) for row in cursor.fetchall()]
     close_connection(conn)
-    
+
     return jsonify({'history': rows})
+
 
 @app.route('/output/<path:filename>')
 def serve_output(filename):
     return send_from_directory('output', filename)
+
 
 # Admin CRUD Code Agréé MySQL
 @app.route('/api/code_agree', methods=['GET'])
@@ -514,6 +505,7 @@ def get_code_agree():
     companies = [dict(row) for row in cursor.fetchall()]
     close_connection(conn)
     return jsonify({'companies': companies})
+
 
 @app.route('/api/code_agree', methods=['POST'])
 @jwt_required()
@@ -538,6 +530,7 @@ def create_code_agree():
     finally:
         close_connection(conn)
 
+
 @app.route('/api/code_agree/<cc>', methods=['DELETE', 'PUT'])
 @jwt_required()
 def update_delete_code_agree(cc):
@@ -553,7 +546,7 @@ def update_delete_code_agree(cc):
             if cursor.rowcount:
                 conn.commit()
                 return jsonify({'message': 'Supprimé'})
-        else:  # PUT
+        else:
             data = request.get_json()
             societe = data['societe'].strip()
             cursor.execute('UPDATE code_agree SET societe = %s WHERE cc = %s', (societe, cc))
@@ -564,7 +557,9 @@ def update_delete_code_agree(cc):
     finally:
         close_connection(conn)
 
+
 if __name__ == '__main__':
     init_db()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    # ✅ PORT dynamique pour Render (Render injecte la variable PORT)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, port=port, host='0.0.0.0')
