@@ -25,8 +25,10 @@ app = Flask(__name__)
 # ✅ JWT secret depuis variable d'environnement (obligatoire en production)
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 jwt = JWTManager(app)
-CORS(app)
-
+CORS(app, origins=[
+    "https://convocation-a762.onrender.com",
+    "http://localhost:3000",
+])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
