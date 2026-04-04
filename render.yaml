@@ -1,0 +1,35 @@
+# ============================================================
+# render.yaml - Infrastructure as Code pour Render
+# Déploiement automatique du backend Flask + Convocation
+# ============================================================
+
+services:
+  - type: web
+    name: douanesci-backend
+    runtime: docker          # ← Docker obligatoire (LibreOffice)
+    dockerfilePath: ./Dockerfile
+    region: frankfurt        # ou oregon selon votre préférence
+    plan: starter            # starter = 512MB RAM (free = 512MB aussi)
+    healthCheckPath: /health
+
+    # Variables d'environnement (les secrets sont à ajouter manuellement
+    # dans Render Dashboard > Environment pour ne pas les committer)
+    envVars:
+      - key: DB_HOST
+        sync: false          # sync:false = à saisir dans le dashboard
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: PORT
+        value: "5000"
