@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './History.css';
 
+// ✅ Utiliser la variable d'environnement injectée au build
+const API_URL = process.env.REACT_APP_API_URL;
+
 const History = ({ user }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -181,7 +184,7 @@ const History = ({ user }) => {
                   </td>
                   <td>
 {(entry.filenames || '').split(';').filter(f => f).map((f, i) => (
-                      <a key={i} href={`http://localhost:5000/output/${f}`} target="_blank" rel="noopener noreferrer" className="download-link">
+                      <a key={i} href={`{API_URL}/output/${f}`} target="_blank" rel="noopener noreferrer" className="download-link">
                         {f}
                       </a>
                     ))}

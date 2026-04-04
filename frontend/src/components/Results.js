@@ -4,15 +4,16 @@ import './Results.css';
 const Results = ({ results }) => {
   if (!results.length) return null;
 
-  const BASE_URL = 'http://localhost:5000';
+  // ✅ Utiliser la variable d'environnement injectée au build
+  const API_URL = process.env.REACT_APP_API_URL;
   const token = localStorage.getItem('token');
 
   const handlePreview = (result) => {
-    window.open(`${BASE_URL}/output/${result.filename}`, '_blank');
+    window.open(`${API_URL}/output/${result.filename}`, '_blank');
   };
 
   const handleDownload = (result) => {
-    const url = `${BASE_URL}/output/${result.filename}`;
+    const url = `${API_URL}/output/${result.filename}`;
     const link = document.createElement('a');
     link.href = url;
     link.download = result.filename;

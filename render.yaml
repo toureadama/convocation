@@ -5,7 +5,7 @@
 
 services:
   - type: web
-    name: douanesci-backend
+    name: douanesci-backend # convocation_douanesci # 
     runtime: docker          # ← Docker obligatoire (LibreOffice)
     dockerfilePath: ./Dockerfile
     region: frankfurt        # ou oregon selon votre préférence
