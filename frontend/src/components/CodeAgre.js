@@ -17,7 +17,7 @@ const CodeAgre = () => {
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('${API_URL}/api/code_agree', {
+      const res = await fetch(`${API_URL}/api/code_agree`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Erreur chargement');
