@@ -284,10 +284,12 @@ def generate_convocation():
         if not conn:
             return jsonify({'error': 'DB error'}), 500
         current_year = datetime.now().strftime('%Y')
+        
         cursor.execute(
-            "SELECT COUNT(*) FROM history WHERE user_login = %s AND YEAR(STR_TO_DATE(timestamp, '%Y-%m-%dT%H:%i:%s')) = %s",
+            "SELECT COUNT(*) FROM history WHERE user_login = %s AND YEAR(timestamp) = %s",
             (current_user, current_year)
         )
+        
         count = cursor.fetchone()[0]
         next_num = f"{int(count) + 1:04d}"
         logger.info(f"[{current_user}] Next num_convoc {current_year}: {next_num} (count={count})")
