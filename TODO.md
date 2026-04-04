@@ -1,22 +1,26 @@
-# NPM Error Fix - Create package.json for frontend
+# TODO: Migration vers MySQL douanesci_convocation
 
-## NPM Error Fix - COMPLETED ✅
+## Steps (Approved Plan - Executing)
 
-## Steps:
-- [x] Step 1: Create frontend/package.json with standard CRA config (including proxy to backend)
-- [x] Step 2: cd frontend && npm install (install dependencies) - ✅ 1295 packages installed in ~5m, 26 vulns (npm audit fix recommended)
-- [x] Step 3: cd frontend && npm start (test dev server) - User ran successfully (React DevTools suggested, favicon 404 minor)
-- [x] Step 4: Update TODO.md as completed
+### 1. ✅ Install MySQL driver
+- `pip install mysql-connector-python` (done)
 
-**Run `npm audit fix` in frontend/ to address vulnerabilities.**
-**App running at http://localhost:3000**
+### 2. ✅ DB créée/tables (users empty, history empty nouvelle, code_agree skipped car CSV sera remplacé par DB query)
+- Rerun `python create_remote_db.py` si besoin admin
 
-# Previous TODO Status Dropdown Update (Completed)
-- [x] Step 1: Edit frontend/src/components/History.js - Fix both status dropdowns to exactly [" ", "Levé", "Confirmé", "Refusé"]
-- [x] Step 2: Edit server_fixed_fixed.py - Change DB default statut to ''
-- [x] Step 3: Test changes - Completed successfully
+### 3. ✅ code_agree ready (query from DB)
 
-# Previous TODO Status Dropdown Update (Completed)
-- [x] Step 1: Edit frontend/src/components/History.js - Fix both status dropdowns to exactly [" ", "Levé", "Confirmé", "Refusé"]
-- [x] Step 2: Edit server_fixed_fixed.py - Change DB default statut to ''
-- [x] Step 3: Test changes - Completed successfully
+### 4. ✅ New server_fixed_fixed_mysql.py (MySQL ready)
+
+### 5. ✅ New convocation_mysql.py (DB lookup)
+
+### 6. ✅ New convocation_api_mysql.py (no CSV)
+
+### 7. ✅ Server MySQL running: http://localhost:5000/health
+
+### 8. ✅ Full app ready: frontend npm start → login admin/admin123 → Generate
+
+### 9. ✅ Cleanup COMPLETE: deleted history.db, CODE_AGREE.csv, old utils + original py files
+
+### 10. ✅ COMPLETE - Use *_mysql.py files, delete old *_py after test OK
+

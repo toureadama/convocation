@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Serveur API Flask avec auth JWT + Users CRUD + Convocation
-Port 5000 - Frontend proxy OK
+Serveur API Flask avec auth JWT + Users CRUD + Convocation MySQL
+Port 5000 - Frontend proxy OK - Connected to douanesci_convocation
 """
-
 import os
 import re
 import subprocess
 import sys
-import sqlite3
 import secrets
 from datetime import datetime, timedelta
-
+import mysql.connector
+from mysql.connector import Error
 from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
@@ -19,82 +18,63 @@ import bcrypt
 import logging
 import pandas as pd
 
-os.makedirs('output', exist_ok=True)
+from db_config import get_db_connection, close_connection, CONFIG
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-secret')
+app.config['JWT_SECRET_KEY'] = 'douanes-ci-super-secret-key-2024-32bytes-minimum-for-sha256-secure!'
 jwt = JWTManager(app)
 CORS(app)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    conn = sqlite3.connect('history.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+def init_db():
+    """Idempotent init - CREATE IF NOT EXISTS already in migration script"""
+    conn = get_db_connection()
+    if not conn:
+        logger.error("Cannot connect to MySQL for init_db")
+        return
+    cursor = conn.cursor()
+    cursor.execute("SHOW TABLES LIKE 'users'")
+    if not cursor.fetchone():
+        logger.error("Tables not found - run create_remote_db.py first")
+    cursor.close()
+    close_connection(conn)
+    logger.info("MySQL douanesci_convocation ready")
+
+def get_db_cursor(dictionary=False):
+    conn = get_db_connection()
+    if not conn:
+        return None
+    cursor = conn.cursor(dictionary=dictionary)
+    return conn, cursor
 
 def init_db():
     conn = get_db_connection()
+    if not conn:
+        logger.error("Cannot connect to MySQL for init_db")
+        return
     cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            civilite TEXT,
-            nom TEXT NOT NULL,
-            prenom TEXT NOT NULL,
-            grade TEXT NOT NULL,
-            login TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            is_active BOOLEAN DEFAULT 1
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            verificateur TEXT,
-            num_declaration TEXT,
-            date_declaration TEXT,
-            fraude TEXT,
-            signature_admin TEXT,
-            csv TEXT DEFAULT 'CODE_AGREE.csv',
-            cc TEXT,
-            num_generated INTEGER,
-            filenames TEXT,
-            user_login TEXT,
-statut TEXT DEFAULT ''
-        )
-    ''')
-    
-    # Migration
-    cursor.execute('PRAGMA table_info(history)')
-    cols = [col[1] for col in cursor.fetchall()]
-    if 'user_login' not in cols:
-        cursor.execute('ALTER TABLE history ADD COLUMN user_login TEXT')
-        logger.info('Migration user_login ajoutée')
-    
-    cursor.execute("SELECT COUNT(*) FROM users WHERE login='admin'")
-    if cursor.fetchone()[0] == 0:
+    # Check admin
+    cursor.execute("SELECT COUNT(*) as count FROM users WHERE login='admin'")
+    count = cursor.fetchone()[0]
+    if count == 0:
         password = 'admin123'
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         cursor.execute(
-            "INSERT INTO users (nom, prenom, grade, login, password_hash) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO users (nom, prenom, grade, login, password_hash) VALUES (%s, %s, %s, %s, %s)",
             ('Admin', 'Super', 'Administrateur', 'admin', password_hash)
         )
+        conn.commit()
         logger.info("Admin créé: admin/admin123")
-    
-    conn.commit()
-    conn.close()
-
-# ... (login, verify, users CRUD inchangés - mêmes que avant)
+    cursor.close()
+    close_connection(conn)
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'OK'})
+    conn = get_db_connection()
+    close_connection(conn)
+    return jsonify({'status': 'OK', 'db': 'MySQL douanesci_convocation'})
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -102,11 +82,12 @@ def login():
     login_ = data.get('login')
     password = data.get('password')
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE login=? AND is_active=1", (login_,))
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'error': 'DB connection failed'}), 500
+    cursor.execute("SELECT * FROM users WHERE login=%s AND is_active=1", (login_,))
     user = cursor.fetchone()
-    conn.close()
+    close_connection(conn)
     
     if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
         access_token = create_access_token(
@@ -135,11 +116,12 @@ def verify_token():
 @app.route('/api/users', methods=['GET'])
 @jwt_required()
 def get_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, login, nom, prenom, grade, civilite, created_at, substr(login,1,3)||'***' AS plain_password FROM users WHERE is_active=1 ORDER BY nom")
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    cursor.execute("SELECT id, login, nom, prenom, grade, civilite, created_at, CONCAT(LEFT(login,3),'***') AS plain_password FROM users WHERE is_active=1 ORDER BY nom")
     users = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    close_connection(conn)
     return jsonify({'users': users})
 
 @app.route('/api/users', methods=['POST'])
@@ -153,13 +135,14 @@ def create_user():
     provided_login = data.get('login')
     provided_password = data.get('password')
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
     
     if provided_login and provided_password:
-        cursor.execute("SELECT id FROM users WHERE login=?", (provided_login,))
+        cursor.execute("SELECT id FROM users WHERE login=%s", (provided_login,))
         if cursor.fetchone():
-            conn.close()
+            close_connection(conn)
             return jsonify({'error': 'Login déjà utilisé'}), 400
         login = provided_login
         password = provided_password
@@ -168,24 +151,23 @@ def create_user():
         login = login_base
         counter = 1
         while True:
-            cursor.execute("SELECT id FROM users WHERE login=?", (login,))
+            cursor.execute("SELECT id FROM users WHERE login=%s", (login,))
             if not cursor.fetchone():
                 break
             login = f"{login_base}{counter}"
             counter += 1
         password = secrets.token_urlsafe(8)
 
-    
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    civilite = data.get('civilite', '') 
+    civilite = data.get('civilite', '')
     cursor.execute(
-        "INSERT INTO users (civilite, nom, prenom, grade, login, password_hash) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (civilite, nom, prenom, grade, login, password_hash) VALUES (%s, %s, %s, %s, %s, %s)",
         (civilite, nom, prenom, grade, login, password_hash)
     )
     user_id = cursor.lastrowid
     conn.commit()
-    conn.close()
+    close_connection(conn)
     
     logger.info(f"User créé: {login}/{password}")
     return jsonify({
@@ -202,25 +184,26 @@ def update_credentials(user_id):
     new_login = data['login']
     new_password = data['password']
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
     
-    cursor.execute("SELECT id FROM users WHERE login=? AND id != ?", (new_login, user_id))
+    cursor.execute("SELECT id FROM users WHERE login=%s AND id != %s", (new_login, user_id))
     if cursor.fetchone():
-        conn.close()
+        close_connection(conn)
         return jsonify({'error': 'Login déjà utilisé'}), 400
     
     password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     cursor.execute(
-        "UPDATE users SET login=?, password_hash=? WHERE id=? AND is_active=1",
+        "UPDATE users SET login=%s, password_hash=%s WHERE id=%s AND is_active=1",
         (new_login, password_hash, user_id)
     )
     if cursor.rowcount == 0:
-        conn.close()
+        close_connection(conn)
         return jsonify({'error': 'User non trouvé'}), 404
     conn.commit()
-    conn.close()
+    close_connection(conn)
     
     logger.info(f"Identifiants modifiés pour user_id {user_id}")
     return jsonify({'message': 'Identifiants mis à jour'})
@@ -229,18 +212,19 @@ def update_credentials(user_id):
 @jwt_required()
 def update_user(user_id):
     data = request.get_json()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    civilite = data.get('civilite', '') 
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    civilite = data.get('civilite', '')
     cursor.execute(
-        "UPDATE users SET civilite=?, nom=?, prenom=?, grade=? WHERE id=? AND is_active=1",
+        "UPDATE users SET civilite=%s, nom=%s, prenom=%s, grade=%s WHERE id=%s AND is_active=1",
         (civilite, data['nom'], data['prenom'], data['grade'], user_id)
     )
     if cursor.rowcount == 0:
-        conn.close()
+        close_connection(conn)
         return jsonify({'error': 'User non trouvé'}), 404
     conn.commit()
-    conn.close()
+    close_connection(conn)
     return jsonify({'message': 'User mis à jour'})
 
 @app.route('/api/history/<int:history_id>/status', methods=['PUT'])
@@ -251,32 +235,35 @@ def update_history_status(history_id):
     
     current_user = get_jwt_identity()
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE history SET statut = ? WHERE id = ? AND user_login = ?
-    """, (new_statut, history_id, current_user))
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    cursor.execute(
+        "UPDATE history SET statut = %s WHERE id = %s AND user_login = %s",
+        (new_statut, history_id, current_user)
+    )
     
     if cursor.rowcount == 0:
-        conn.close()
+        close_connection(conn)
         return jsonify({'error': 'Non autorisé ou non trouvé'}), 403
     
     conn.commit()
-    conn.close()
+    close_connection(conn)
     
     return jsonify({'message': 'Statut mis à jour'})
 
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])
 @jwt_required()
 def delete_user(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET is_active=0 WHERE id=?", (user_id,))
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    cursor.execute("UPDATE users SET is_active=0 WHERE id=%s", (user_id,))
     if cursor.rowcount == 0:
-        conn.close()
+        close_connection(conn)
         return jsonify({'error': 'User non trouvé'}), 404
     conn.commit()
-    conn.close()
+    close_connection(conn)
     return jsonify({'message': 'User supprimé'})
 
 @app.route('/api/generate', methods=['POST'])
@@ -288,20 +275,21 @@ def generate_convocation():
         logger.info(f"[{current_user}] Génération: {data}")
 
         # Calcul next_num dynamique par user/année
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        conn, cursor = get_db_cursor()
+        if not conn:
+            return jsonify({'error': 'DB error'}), 500
         current_year = datetime.now().strftime('%Y')
-        cursor.execute("""
-            SELECT COUNT(*) FROM history 
-            WHERE user_login = ? AND strftime('%Y', timestamp) = ?
-        """, (current_user, current_year))
+        cursor.execute(
+            "SELECT COUNT(*) FROM history WHERE user_login = %s AND YEAR(STR_TO_DATE(timestamp, '%Y-%m-%dT%H:%i:%s')) = %s",
+            (current_user, current_year)
+        )
         count = cursor.fetchone()[0]
-        next_num = f"{count + 1:04d}"
+        next_num = f"{int(count) + 1:04d}"
         logger.info(f"[{current_user}] Next num_convoc {current_year}: {next_num} (count={count})")
-        conn.close()
+        close_connection(conn)
         
         args_list = [
-            sys.executable, 'convocation.py',
+sys.executable, 'convocation_mysql.py',
             '--cc', data['cc'],
             '--verificateur', data['verificateur'],
             '--num_declaration', data['num_declaration'],
@@ -323,33 +311,32 @@ def generate_convocation():
             logger.error(f'Subprocess failed: {result.stderr}')
             return jsonify({'error': result.stderr}), 500
         
-        
         stdout_normalized = result.stdout.replace('\\', '/')
         logger.info(f"stdout tail: {repr(stdout_normalized.splitlines()[-3:])}")  
-        pdf_matches = re.findall(r'OK\s*:\s*(output/[^\s\r\n]+)', stdout_normalized)
+        pdf_matches = re.findall(r'OK\\s*:\\s*(output/[^\s\r\n]+)', stdout_normalized)
         results = [{'path': match.strip(), 'filename': os.path.basename(match)} for match in pdf_matches]
         logger.info(f"Parsed {len(results)} files: {pdf_matches}")
         
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO history (timestamp, verificateur, num_declaration, date_declaration, 
-                               fraude, signature_admin, cc, num_generated, filenames, user_login)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            datetime.now().isoformat(),
-            data.get('verificateur'),
-            data.get('num_declaration'),
-            data.get('date_declaration'),
-            data.get('fraude'),
-            data.get('signature_admin'),
-            data.get('cc'),
-            len(results),
-            ';'.join([r['filename'] for r in results]),
-            current_user
-        ))
+        conn, cursor = get_db_cursor()
+        if not conn:
+            return jsonify({'error': 'DB error'}), 500
+        cursor.execute(
+            "INSERT INTO history (timestamp, verificateur, num_declaration, date_declaration, fraude, signature_admin, cc, num_generated, filenames, user_login) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (
+                datetime.now().isoformat(),
+                data.get('verificateur'),
+                data.get('num_declaration'),
+                data.get('date_declaration'),
+                data.get('fraude'),
+                data.get('signature_admin'),
+                data.get('cc'),
+                len(results),
+                ';'.join([r['filename'] for r in results]),
+                current_user
+            )
+        )
         conn.commit()
-        conn.close()
+        close_connection(conn)
         
         return jsonify({
             'success': True,
@@ -366,14 +353,13 @@ def generate_convocation():
 @app.route('/api/companies', methods=['GET'])
 @jwt_required()
 def get_companies():
-    conn = get_db_connection()
-    try:
-        companies = conn.execute('SELECT cc, societe FROM code_agree ORDER BY cc LIMIT 100').fetchall()
-        return jsonify({'companies': [{'cc': r['cc'], 'societe': r['societe']} for r in companies]})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    cursor.execute('SELECT cc, societe FROM code_agree ORDER BY cc LIMIT 100')
+    companies = [dict(row) for row in cursor.fetchall()]
+    close_connection(conn)
+    return jsonify({'companies': companies})
 
 @app.route('/api/history/export', methods=['GET'])
 @jwt_required()
@@ -382,10 +368,10 @@ def export_history():
     if current_user != 'admin':
         return jsonify({'error': 'Admin only'}), 403
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
     
-    # Même filtres que get_history
     where_conditions = []
     params = []
     
@@ -398,25 +384,25 @@ def export_history():
     filter_statut = request.args.get('filter_statut')
     
     if filter_date_from:
-        where_conditions.append("timestamp >= ?")
+        where_conditions.append("timestamp >= %s")
         params.append(filter_date_from)
     if filter_date_to:
-        where_conditions.append("timestamp <= ?")
+        where_conditions.append("timestamp <= %s")
         params.append(filter_date_to)
     if filter_cc:
-        where_conditions.append("cc LIKE ?")
+        where_conditions.append("cc LIKE %s")
         params.append(f"%{filter_cc}%")
     if filter_verif:
-        where_conditions.append("verificateur LIKE ?")
+        where_conditions.append("verificateur LIKE %s")
         params.append(f"%{filter_verif}%")
     if filter_fraude:
-        where_conditions.append("fraude LIKE ?")
+        where_conditions.append("fraude LIKE %s")
         params.append(f"%{filter_fraude}%")
     if filter_admin:
-        where_conditions.append("signature_admin LIKE ?")
+        where_conditions.append("signature_admin LIKE %s")
         params.append(f"%{filter_admin}%")
     if filter_statut:
-        where_conditions.append("statut = ?")
+        where_conditions.append("statut = %s")
         params.append(filter_statut)
     
     where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
@@ -429,13 +415,10 @@ def export_history():
     """
     
     cursor.execute(query, params)
-    rows = cursor.fetchall()
-    conn.close()
+    rows = [dict(row) for row in cursor.fetchall()]
+    close_connection(conn)
     
-    columns = ['id', 'timestamp', 'verificateur', 'num_declaration', 'date_declaration', 
-               'fraude', 'signature_admin', 'cc', 'num_generated', 'filenames', 'user_login', 'statut']
-    
-    df = pd.DataFrame([dict(zip(columns, row)) for row in rows])
+    df = pd.DataFrame(rows)
     csv_buffer = df.to_csv(index=False, encoding='utf-8-sig')
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -455,17 +438,16 @@ def get_history():
     offset = page * limit
     
     current_user = get_jwt_identity()
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'history': []}), 200
     
-    # Filtres admin only
     where_conditions = []
     params = []
     
     if current_user != 'admin':
-        where_conditions.append("user_login = ?")
+        where_conditions.append("user_login = %s")
         params.append(current_user)
-    # Admin filtres
     else:
         filter_date_from = request.args.get('filter_date_from')
         filter_date_to = request.args.get('filter_date_to')
@@ -476,25 +458,25 @@ def get_history():
         filter_statut = request.args.get('filter_statut')
         
         if filter_date_from:
-            where_conditions.append("timestamp >= ?")
+            where_conditions.append("timestamp >= %s")
             params.append(filter_date_from)
         if filter_date_to:
-            where_conditions.append("timestamp <= ?")
+            where_conditions.append("timestamp <= %s")
             params.append(filter_date_to)
         if filter_cc:
-            where_conditions.append("cc LIKE ?")
+            where_conditions.append("cc LIKE %s")
             params.append(f"%{filter_cc}%")
         if filter_verif:
-            where_conditions.append("verificateur LIKE ?")
+            where_conditions.append("verificateur LIKE %s")
             params.append(f"%{filter_verif}%")
         if filter_fraude:
-            where_conditions.append("fraude LIKE ?")
+            where_conditions.append("fraude LIKE %s")
             params.append(f"%{filter_fraude}%")
         if filter_admin:
-            where_conditions.append("signature_admin LIKE ?")
+            where_conditions.append("signature_admin LIKE %s")
             params.append(f"%{filter_admin}%")
         if filter_statut:
-            where_conditions.append("statut = ?")
+            where_conditions.append("statut = %s")
             params.append(filter_statut)
     
     where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
@@ -503,35 +485,35 @@ def get_history():
         SELECT id, timestamp, verificateur, num_declaration, date_declaration, 
                fraude, signature_admin, cc, num_generated, filenames, user_login, statut
         FROM history {where_clause}
-        ORDER BY timestamp DESC LIMIT ? OFFSET ?
+        ORDER BY timestamp DESC LIMIT %s OFFSET %s
     """
     
     params.extend([limit, offset])
     cursor.execute(query, params)
     
-    rows = cursor.fetchall()
-    conn.close()
+    rows = [dict(row) for row in cursor.fetchall()]
+    close_connection(conn)
     
-    columns = ['id', 'timestamp', 'verificateur', 'num_declaration', 'date_declaration', 
-               'fraude', 'signature_admin', 'cc', 'num_generated', 'filenames', 'user_login', 'statut']
-    history = [dict(zip(columns, row)) for row in rows]
-    return jsonify({'history': history})
+    return jsonify({'history': rows})
 
 @app.route('/output/<path:filename>')
 def serve_output(filename):
     return send_from_directory('output', filename)
 
-# Admin CRUD Code Agréé
+# Admin CRUD Code Agréé MySQL
 @app.route('/api/code_agree', methods=['GET'])
 @jwt_required()
 def get_code_agree():
     current_user = get_jwt_identity()
     if current_user != 'admin':
         return jsonify({'error': 'Admin only'}), 403
-    conn = get_db_connection()
-    companies = conn.execute('SELECT cc, societe FROM code_agree ORDER BY cc').fetchall()
-    conn.close()
-    return jsonify({'companies': [dict(r) for r in companies]})
+    conn, cursor = get_db_cursor(dictionary=True)
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    cursor.execute('SELECT cc, societe FROM code_agree ORDER BY cc')
+    companies = [dict(row) for row in cursor.fetchall()]
+    close_connection(conn)
+    return jsonify({'companies': companies})
 
 @app.route('/api/code_agree', methods=['POST'])
 @jwt_required()
@@ -542,16 +524,19 @@ def create_code_agree():
     data = request.get_json()
     cc = data['cc'].strip()
     societe = data['societe'].strip()
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
     try:
-        cursor.execute('INSERT INTO code_agree (cc, societe) VALUES (?, ?)', (cc, societe))
+        cursor.execute('INSERT INTO code_agree (cc, societe) VALUES (%s, %s)', (cc, societe))
         conn.commit()
         return jsonify({'message': 'Code agréé ajouté', 'cc': cc}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'CC existe déjà'}), 400
+    except Error as e:
+        if 'Duplicate entry' in str(e):
+            return jsonify({'error': 'CC existe déjà'}), 400
+        return jsonify({'error': str(e)}), 500
     finally:
-        conn.close()
+        close_connection(conn)
 
 @app.route('/api/code_agree/<cc>', methods=['DELETE', 'PUT'])
 @jwt_required()
@@ -559,24 +544,26 @@ def update_delete_code_agree(cc):
     current_user = get_jwt_identity()
     if current_user != 'admin':
         return jsonify({'error': 'Admin only'}), 403
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if request.method == 'DELETE':
-        cursor.execute('DELETE FROM code_agree WHERE cc = ?', (cc,))
-        if cursor.rowcount:
-            conn.commit()
-            return jsonify({'message': 'Supprimé'})
-    else:  # PUT
-        data = request.get_json()
-        societe = data['societe'].strip()
-        cursor.execute('UPDATE code_agree SET societe = ? WHERE cc = ?', (societe, cc))
-        if cursor.rowcount:
-            conn.commit()
-            return jsonify({'message': 'Mis à jour'})
-    conn.close()
-    return jsonify({'error': 'Non trouvé'}), 404
-
-init_db()
+    conn, cursor = get_db_cursor()
+    if not conn:
+        return jsonify({'error': 'DB error'}), 500
+    try:
+        if request.method == 'DELETE':
+            cursor.execute('DELETE FROM code_agree WHERE cc = %s', (cc,))
+            if cursor.rowcount:
+                conn.commit()
+                return jsonify({'message': 'Supprimé'})
+        else:  # PUT
+            data = request.get_json()
+            societe = data['societe'].strip()
+            cursor.execute('UPDATE code_agree SET societe = %s WHERE cc = %s', (societe, cc))
+            if cursor.rowcount:
+                conn.commit()
+                return jsonify({'message': 'Mis à jour'})
+        return jsonify({'error': 'Non trouvé'}), 404
+    finally:
+        close_connection(conn)
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True, port=5000, host='0.0.0.0')

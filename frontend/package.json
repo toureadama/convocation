@@ -31,5 +31,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://convocation-douanes-ci.onrender.com"
+  "proxy": "http://localhost:5000"
 }
