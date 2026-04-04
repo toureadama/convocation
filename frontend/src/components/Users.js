@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Users.css';
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

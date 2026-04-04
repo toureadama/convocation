@@ -7,6 +7,8 @@ import Login from './components/Login';
 import CodeAgre from './components/CodeAgre';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);

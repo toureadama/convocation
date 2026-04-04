@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Form.css';
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const Form = ({ onGenerate, loading, currentUser }) => {
   const [formData, setFormData] = useState({
     csv: 'CODE_AGREE.csv',

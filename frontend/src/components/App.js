@@ -6,6 +6,8 @@ import Users from './components/Users';
 import Login from './components/Login';
 import './App.css';
 
+const API_URL = process.env.REACT_APP_API_URL
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);

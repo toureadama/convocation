@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './CodeAgre.css';
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const CodeAgre = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './Login.css'; // À créer
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const Login = ({ onLogin, error }) => {
   const [credentials, setCredentials] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
