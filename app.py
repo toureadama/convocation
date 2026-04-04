@@ -21,7 +21,7 @@ import pandas as pd
 from db_config import get_db_connection, close_connection, CONFIG
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'douanes-ci-super-secret-key-2024-32bytes-minimum-for-sha256-secure!'
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 CORS(app)
 
@@ -289,7 +289,7 @@ def generate_convocation():
         close_connection(conn)
         
         args_list = [
-sys.executable, 'convocation_mysql.py',
+sys.executable, os.path.join(os.getcwd(), 'convocation_mysql.py'),
             '--cc', data['cc'],
             '--verificateur', data['verificateur'],
             '--num_declaration', data['num_declaration'],
@@ -566,4 +566,5 @@ def update_delete_code_agree(cc):
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)

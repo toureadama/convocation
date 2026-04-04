@@ -1,12 +1,13 @@
+import os
 import mysql.connector
 from mysql.connector import Error
 
 CONFIG = {
-    'host': 'mysql-a54ef6c-toureadama-2bc0.c.aivencloud.com',
-    'port': 15107,
-    'user': 'avnadmin',
-    'password': 'AVNS_O9FSI98GLiPqRHk5e0H',
-    'database': 'douanesci_convocation',
+    'host': os.getenv('DB_HOST'),
+    'port': int(os.getenv('DB_PORT', 3306)),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'database': os.getenv('DB_NAME'),
     'charset': 'utf8mb4'
 }
 
@@ -23,4 +24,3 @@ def get_db_connection():
 def close_connection(conn):
     if conn and conn.is_connected():
         conn.close()
-

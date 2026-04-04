@@ -8,7 +8,7 @@ from typing import Tuple
 
 import pandas as pd
 from docxtpl import DocxTemplate
-from docx2pdf import convert
+import subprocess
 from db_config import get_db_connection, close_connection
 
 class ConvocationGenerator:
@@ -72,10 +72,27 @@ class ConvocationGenerator:
         pdf_path = self.output_dir / pdf_name
 
         self.doc.save(docx_path)
-        logging.info(f'Docx sauvé : {docx_path}')
-        convert(str(docx_path), str(pdf_path))
-        logging.info(f'PDF généré : {pdf_path}')
+        
+        
+        # Conversion via LibreOffice (Render compatible)
+        try:
+            subprocess.run([
+                "libreoffice",
+                "--headless",
+                "--convert-to", "pdf",
+                str(docx_path),
+                "--outdir",
+                str(self.output_dir)
+            ], check=True, timeout=30)
+
+            logging.info(f'PDF généré : {pdf_path}')
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Erreur conversion PDF: {e}")
+            raise RuntimeError("Conversion PDF échouée")
+        
         print(f'[1/1] OK : {pdf_path}')
+        
         return str(docx_path), str(pdf_path)
 
 def main():
