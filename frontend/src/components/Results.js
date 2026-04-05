@@ -1,10 +1,11 @@
 import React from 'react';
 import './Results.css';
 
-const Results = ({ results }) => {
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const ResultsComponent = ({ results }) => {
   if (!results.length) return null;
 
-  const API_URL = process.env.REACT_APP_API_URL
   const token = localStorage.getItem('token');
 
   const handlePreview = (result) => {
@@ -21,7 +22,6 @@ const Results = ({ results }) => {
     link.click();
     document.body.removeChild(link);
   };
-
 
   return (
     <div className="results-container">
@@ -50,4 +50,7 @@ const Results = ({ results }) => {
   );
 };
 
+// Memoize for perf (prevents re-render if results unchanged)
+const Results = React.memo(ResultsComponent);
 export default Results;
+

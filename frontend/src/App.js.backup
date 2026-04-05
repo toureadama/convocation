@@ -1,31 +1,22 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
-const Form = lazy(() => import('./components/Form'));
-const Results = lazy(() => import('./components/Results'));
-const History = lazy(() => import('./components/History'));
-const Users = lazy(() => import('./components/Users'));
-const Login = lazy(() => import('./components/Login'));
-const CodeAgre = lazy(() => import('./components/CodeAgre'));
+import React, { useState, useEffect } from 'react';
+import Form from './components/Form';
+import Results from './components/Results';
+import History from './components/History';
+import Users from './components/Users';
+import Login from './components/Login';
+import CodeAgre from './components/CodeAgre';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(null);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0); // New: 0-100 progress
   const [error, setError] = useState('');
   const [tab, setTab] = useState('generate');
   const [loginError, setLoginError] = useState('');
-
-  // Simulate progress during generation
-  const simulateProgress = () => {
-    setProgress(10); // Init
-    setTimeout(() => setProgress(40), 800); // Processing CSV
-    setTimeout(() => setProgress(70), 2000); // Generating PDFs
-    setTimeout(() => setProgress(100), 3500); // Complete
-  };
 
   useEffect(() => {
     if (token) {
@@ -33,10 +24,12 @@ function App() {
         headers: { Authorization: `Bearer ${token}` },
       }).then(async res => {
         if (!res.ok) {
+          console.error('Verify failed:', res.status, await res.text());
           localStorage.removeItem('token');
           setToken(null);
         }
-      }).catch(() => {
+      }).catch(err => {
+        console.error('Verify error:', err);
         localStorage.removeItem('token');
         setToken(null);
       });
@@ -60,12 +53,9 @@ function App() {
     setLoading(true);
     setError('');
     setResults([]);
-    setProgress(0);
-    simulateProgress(); // Start simulation parallel to API
 
     try {
       const params = new URLSearchParams(formData);
-      const controller = new AbortController(); // Opt: Cancelable
       const response = await fetch(`${API_URL}/api/generate`, {
         method: 'POST',
         headers: { 
@@ -73,28 +63,21 @@ function App() {
           'Authorization': `Bearer ${token}`
         },
         body: params,
-        signal: controller.signal,
       });
 
       if (!response.ok) throw new Error(`Erreur: ${response.status}`);
       
       const data = await response.json();
       setResults(data.results || []);
-      setProgress(100); // Ensure 100% on success
     } catch (err) {
       setError(err.message);
-      setProgress(0);
     } finally {
       setLoading(false);
     }
   };
 
   if (!token) {
-    return (
-      <Suspense fallback={<div>Chargement...</div>}>
-        <Login onLogin={handleLogin} error={loginError} />
-      </Suspense>
-    );
+    return <Login onLogin={handleLogin} error={loginError} />;
   }
 
   return (
@@ -139,34 +122,17 @@ function App() {
         </div>
         
         {tab === 'generate' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <Form 
-              onGenerate={handleGenerate} 
-              loading={loading} 
-              progress={progress} 
-              currentUser={user} 
-            />
+          <>
+<Form onGenerate={handleGenerate} loading={loading} currentUser={user} />
             {error && <div className="error">{error}</div>}
             <Results results={results} />
-          </Suspense>
+          </>
         )}
         
-        {tab === 'history' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <History user={user} />
-          </Suspense>
-        )}
+{tab === 'history' && <History user={user} />}
         
-        {tab === 'admin' && user?.grade === 'Administrateur' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <Users />
-          </Suspense>
-        )}
-        {tab === 'code_agre' && user?.grade === 'Administrateur' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <CodeAgre />
-          </Suspense>
-        )}
+{tab === 'admin' && <Users />}
+        {tab === 'code_agre' && <CodeAgre />}
       </main>
     </div>
   );
