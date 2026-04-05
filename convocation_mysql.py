@@ -22,7 +22,7 @@ class ConvocationGenerator:
         return ''.join(word[0].upper() for word in verificateur.split() if word)
     
     def _get_chef(self, signature_admin: str) -> str:
-        return "Chef de Visite" if signature_admin=="OUATTARA KARIM" else "Chef de Visite Adjoint"
+        return "Chef de Visite" if signature_admin=="COULIBALY KARIM" else "Chef de Visite Adjoint"
 
     def _get_company_by_cc(self, cc: str):
         """Replace CSV lookup with DB query"""
