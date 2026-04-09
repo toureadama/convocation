@@ -17,8 +17,7 @@ output/
 # Templates (NE PAS exclure - fichiers sources)
 # Convocation_modele.docx <- DOIT être commité
 
-# Fichiers DOCX générés (exclure uniquement ceux dans output/)
-output/*.docx
+
 
 # IDE
 .vscode/
