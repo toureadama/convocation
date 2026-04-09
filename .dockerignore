@@ -16,11 +16,6 @@ frontend/node_modules/
 .vscode/
 .idea/
 
-# Output files
-output/
-*.pdf
-*.docx
-
 # Env files
 *.env
 secrets.env
