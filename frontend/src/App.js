@@ -1,6 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 
+// API Base URL for production deployment
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 // Lazy-loaded components for better initial load performance
 const Form = lazy(() => import('./components/Form'));
 const Results = lazy(() => import('./components/Results'));
@@ -37,10 +40,10 @@ function App() {
 
     const verifyToken = async () => {
       try {
-        const response = await fetch('/api/verify', {
+        const response = await fetch(`${API_BASE_URL}/api/verify`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (!response.ok) {
           handleLogout();
         }
@@ -83,7 +86,7 @@ function App() {
 
     try {
       const params = new URLSearchParams(formData);
-      const response = await fetch('/api/generate', {
+      const response = await fetch(`${API_BASE_URL}/api/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',

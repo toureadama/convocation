@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Users.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const GRADE_OPTIONS = ['Vérificateur', 'Administrateur', 'Super Administrateur'];
 
 const Users = ({ currentUserRole }) => {
@@ -22,7 +24,7 @@ const Users = ({ currentUserRole }) => {
   const fetchUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/users', {
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -43,10 +45,10 @@ const Users = ({ currentUserRole }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/users/${editingId}` : '/api/users';
+      const url = editingId ? `${API_BASE_URL}/api/users/${editingId}` : `${API_BASE_URL}/api/users`;
       const token = localStorage.getItem('token');
       
       const body = editingId
@@ -111,7 +113,7 @@ const Users = ({ currentUserRole }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${user.id}/credentials`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${user.id}/credentials`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +139,7 @@ const Users = ({ currentUserRole }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

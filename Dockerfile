@@ -12,8 +12,13 @@ RUN apt-get update && apt-get install -y \
     default-jre-headless \
     fonts-liberation \
     fonts-dejavu \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Installer Node.js pour build frontend
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
 # Répertoire de travail
 WORKDIR /app
@@ -22,8 +27,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le projet
-COPY . .
+# Copier le backend
+COPY app.py db_config.py convocation_mysql.py ./
+COPY Convocation_modele.docx .
+
+# Build frontend
+COPY frontend ./frontend
+RUN cd frontend && npm install && npm run build
 
 # Créer le dossier output (persistance limitée sur Render Free)
 RUN mkdir -p output

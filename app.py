@@ -19,6 +19,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 import bcrypt
 import pandas as pd
+import mysql.connector
 
 from db_config import get_db_connection, close_connection
 
@@ -94,12 +95,22 @@ def validate_date(date_str):
 
 
 def admin_required(f):
-    """Decorator to require admin role."""
+    """Decorator to require admin or super admin role."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         current_user = get_jwt_identity()
-        if current_user != 'admin':
-            return jsonify({'error': 'Admin access required'}), 403
+        try:
+            with get_db_context() as (conn, cursor):
+                cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+                user_row = cursor.fetchone()
+                user_role = user_row['role'] if user_row else 'Vérificateur'
+                
+                if user_role not in ('Administrateur', 'Super Administrateur'):
+                    return jsonify({'error': 'Admin access required'}), 403
+        except Exception as e:
+            logger.error(f"Admin check failed: {e}")
+            return jsonify({'error': 'Access denied'}), 403
+        
         return f(*args, **kwargs)
     return decorated_function
 
@@ -275,8 +286,13 @@ def build_history_query(current_user, filters, include_pagination=True):
         pass
     elif user_role == 'Administrateur':
         # Admin sees: own entries + entries where signature_admin matches
-        where_conditions.append("(h.user_login = %s OR h.signature_admin = %s)")
-        params.extend([current_user, user_signature])
+        if user_signature:
+            where_conditions.append("(h.user_login = %s OR h.signature_admin = %s)")
+            params.extend([current_user, user_signature])
+        else:
+            # If no signature_name, only show own entries
+            where_conditions.append("h.user_login = %s")
+            params.append(current_user)
     else:
         # Vérificateur sees only own entries
         where_conditions.append("h.user_login = %s")
@@ -348,7 +364,7 @@ def serialize_history_rows(rows):
 def get_history():
     """Get convocation history with optional filters and pagination."""
     current_user = get_jwt_identity()
-    
+
     try:
         data = request.json or {}
         page = max(0, int(data.get('page', DEFAULT_PAGINATION['page'])))
@@ -359,18 +375,25 @@ def get_history():
         with get_db_context() as (conn, cursor):
             query, params = build_history_query(current_user, filters)
             params.extend([limit, offset])
-            
+
+            logger.info(f"Executing history query for user: {current_user}, page: {page}, limit: {limit}")
+            logger.debug(f"Query params: {params}")
+
             cursor.execute(query, params)
             rows = serialize_history_rows(cursor.fetchall())
-            
+
+            logger.info(f"History retrieval successful: {len(rows)} records")
             return jsonify({'history': rows})
-            
+
     except ValueError as e:
-        logger.warning(f"Invalid pagination parameters: {e}")
+        logger.error(f"Invalid pagination parameters: {e}")
         return jsonify({'error': 'Invalid pagination parameters'}), 400
+    except mysql.connector.Error as db_err:
+        logger.error(f"Database error in history retrieval: {db_err}", exc_info=True)
+        return jsonify({'error': f'Database error: {str(db_err)}'}), 500
     except Exception as e:
-        logger.error(f"History retrieval error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        logger.error(f"History retrieval error: {e}", exc_info=True)
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 @app.route('/api/history/<int:entry_id>/fields', methods=['PUT'])
 @jwt_required()
@@ -419,12 +442,13 @@ def update_history_fields(entry_id):
 @admin_required
 def history_export():
     """Export history to CSV format."""
+    current_user = get_jwt_identity()
     try:
         data = request.json or {}
         filters = data.get('filters', {})
 
         with get_db_context() as (conn, cursor):
-            query, params = build_history_query('admin', filters, include_pagination=False)
+            query, params = build_history_query(current_user, filters, include_pagination=False)
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
@@ -433,7 +457,7 @@ def history_export():
 
             df = pd.DataFrame(rows)
             csv_data = df.to_csv(index=False)
-            
+
             return csv_data, 200, {
                 'Content-Type': 'text/csv',
                 'Content-Disposition': 'attachment; filename=history_export.csv'
@@ -450,32 +474,37 @@ def update_history_status(entry_id):
     current_user = get_jwt_identity()
     data = request.json
     statut = data.get('statut')
-    
+
     if not statut:
         return jsonify({'error': 'Status is required'}), 400
 
     try:
         with get_db_context() as (conn, cursor):
-            # Check if entry exists and belongs to user (or user is admin)
+            # Check if entry exists
             cursor.execute(
                 'SELECT id, user_login FROM history WHERE id = %s',
                 (entry_id,)
             )
             entry = cursor.fetchone()
-            
+
             if not entry:
                 return jsonify({'error': 'Entry not found'}), 404
+
+            # Check if user is admin
+            cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            user_role = user_row['role'] if user_row else 'Vérificateur'
             
             # Only owner or admin can update status
-            if current_user != 'admin' and entry['user_login'] != current_user:
+            if user_role not in ('Administrateur', 'Super Administrateur') and entry['user_login'] != current_user:
                 return jsonify({'error': 'Access denied. You can only modify your own entries.'}), 403
-            
+
             cursor.execute('UPDATE history SET statut = %s WHERE id = %s', (statut, entry_id))
             conn.commit()
-            
+
             logger.info(f"Status updated for entry {entry_id} by {current_user}: {statut}")
             return jsonify({'success': True})
-            
+
     except Exception as e:
         logger.error(f"Status update error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -843,6 +872,19 @@ def serve_pdf(filename):
     """Serve generated PDF files."""
     return send_from_directory('output', filename)
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    """Serve React frontend in production."""
+    try:
+        if path != "" and os.path.exists(os.path.join('frontend', 'build', path)):
+            return send_from_directory(os.path.join('frontend', 'build'), path)
+        else:
+            # Serve index.html for all other routes (React Router support)
+            return send_from_directory(os.path.join('frontend', 'build'), 'index.html')
+    except Exception:
+        return jsonify({'error': 'Frontend not found'}), 404
+
 # ============================================================================
 # Application Entry Point
 # ============================================================================
@@ -850,8 +892,9 @@ def serve_pdf(filename):
 if __name__ == '__main__':
     if init_db():
         port = int(os.environ.get('PORT', 5000))
-        logger.info(f"Starting server on port {port}")
-        app.run(debug=True, port=port, host='0.0.0.0')
+        is_production = os.environ.get('FLASK_ENV') == 'production'
+        logger.info(f"Starting server on port {port} (production: {is_production})")
+        app.run(debug=not is_production, port=port, host='0.0.0.0')
     else:
         logger.error("Failed to initialize database. Exiting.")
         sys.exit(1)

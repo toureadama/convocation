@@ -24,21 +24,22 @@ const History = ({ user, canViewAll }) => {
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  const isAdmin = user?.grade === 'Administrateur' || user?.role === 'Administrateur';
-  const isSuperAdmin = user?.grade === 'Super Administrateur' || user?.role === 'Super Administrateur';
+  const isAdmin = user?.grade === 'Administrateur' || user?.role === 'Administrateur' ||
+                  user?.grade === 'Super Administrateur' || user?.role === 'Super Administrateur';
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('Non authentifié');
+        setError('Non authentifié. Veuillez vous connecter.');
+        setLoading(false);
         return;
       }
 
-      const response = await fetch('/api/history', {
+      const response = await fetch(`${API_BASE_URL}/api/history`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,9 +52,19 @@ const History = ({ user, canViewAll }) => {
         })
       });
 
+      if (response.status === 401) {
+        // Token expired or invalid
+        console.warn('Authentication expired. Please login again.');
+        localStorage.removeItem('token');
+        setError('Session expirée. Veuillez vous reconnecter.');
+        setLoading(false);
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erreur ${response.status}`);
+        const errorMsg = errorData.error || `Erreur serveur (${response.status})`;
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -82,7 +93,7 @@ const History = ({ user, canViewAll }) => {
 const updateStatus = async (entryId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/history/${entryId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/history/${entryId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +118,7 @@ const updateStatus = async (entryId, newStatus) => {
   const updateField = async (entryId, field, value) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/history/${entryId}/fields`, {
+      const response = await fetch(`${API_BASE_URL}/api/history/${entryId}/fields`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +144,7 @@ const updateStatus = async (entryId, newStatus) => {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/history/export', {
+      const response = await fetch(`${API_BASE_URL}/api/history/export`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

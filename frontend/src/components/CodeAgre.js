@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './CodeAgre.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const CodeAgre = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ const CodeAgre = () => {
   const fetchCompanies = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/code_agree', {
+      const response = await fetch(`${API_BASE_URL}/api/code_agree`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -41,7 +43,7 @@ const CodeAgre = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/code_agree', {
+      const response = await fetch(`${API_BASE_URL}/api/code_agree`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +69,7 @@ const CodeAgre = () => {
   const handleUpdate = async (cc, newSociete) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/code_agree/${cc}`, {
+      const response = await fetch(`${API_BASE_URL}/api/code_agree/${cc}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +92,7 @@ const CodeAgre = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/code_agree/${cc}`, {
+      const response = await fetch(`${API_BASE_URL}/api/code_agree/${cc}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

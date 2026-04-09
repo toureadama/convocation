@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Frontend node_modules (will be installed in Docker)
+frontend/node_modules/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Output files
+output/
+*.pdf
+*.docx
+
+# Env files
+*.env
+secrets.env
+
+# Docs
+*.md
+DEPLOYMENT*
+README*

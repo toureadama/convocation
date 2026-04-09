@@ -3,7 +3,11 @@
     "allow": [
       "Bash(python *)",
       "Bash(.venv\\scripts\\python.exe *)",
-      "Bash(dir)"
+      "Bash(dir)",
+      "Bash(timeout *)",
+      "Bash(taskkill *)",
+      "Bash(py *)",
+      "Bash(npm run *)"
     ]
   },
   "$version": 3

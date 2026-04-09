@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import './Login.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Login = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)
