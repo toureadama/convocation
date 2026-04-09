@@ -64,8 +64,7 @@ def get_db_context():
     if not conn:
         raise RuntimeError("Database connection failed")
     try:
-        conn.row_factory = lambda c, r: dict(zip([col[0] for col in c.description], r))
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         yield conn, cursor
     except Exception as e:
         logger.error(f"Database error: {e}")

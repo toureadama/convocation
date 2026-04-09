@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(python *)",
-      "Bash(.venv\\scripts\\python.exe *)"
+      "Bash(.venv\\scripts\\python.exe *)",
+      "Bash(dir)"
     ]
   },
   "$version": 3
