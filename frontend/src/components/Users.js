@@ -1,62 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Users.css';
 
-const API_URL = process.env.REACT_APP_API_URL
+const GRADE_OPTIONS = ['Vérificateur', 'Administrateur', 'Super Administrateur'];
 
-const Users = () => {
+const Users = ({ currentUserRole }) => {
+  const isSuperAdmin = currentUserRole === 'Super Administrateur';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ civilite: '', nom: '', prenom: '', grade: '', login: '', password: '' });
+  const [formData, setFormData] = useState({
+    civilite: '',
+    nom: '',
+    prenom: '',
+    grade: '',
+    login: '',
+    password: ''
+  });
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/users`, {
+      const response = await fetch('/api/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erreur chargement');
-      const data = await res.json();
+      
+      if (!response.ok) throw new Error('Erreur chargement');
+      
+      const data = await response.json();
       setUsers(data.users || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-      const handleSubmit = async (e) => {
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `${API_URL}/api/users/${editingId}` : `${API_URL}/api/users`;
+      const url = editingId ? `/api/users/${editingId}` : '/api/users';
       const token = localStorage.getItem('token');
-      const res = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          ...formData,
-          civilite: formData.civilite || ''
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Erreur sauvegarde');
       
-      if (method === 'POST' && result.password) {
-        alert(`Utilisateur créé ! Login: ${result.login} Password: ${result.password}`);
+      const body = editingId
+        ? { civilite: formData.civilite, nom: formData.nom, prenom: formData.prenom, grade: formData.grade }
+        : {
+            civilite: formData.civilite,
+            nom: formData.nom,
+            prenom: formData.prenom,
+            grade: formData.grade,
+            login: formData.login,
+            password: formData.password
+          };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erreur sauvegarde');
+
+      if (method === 'POST') {
+        alert(`✅ Utilisateur créé avec succès!\n\nIdentifiant: ${result.login}\n\nL'utilisateur peut maintenant se connecter.`);
+      } else {
+        alert('✅ Utilisateur modifié avec succès');
       }
-    setFormData({ civilite: '', nom: '', prenom: '', grade: '', login: '', password: '' });
-      setEditingId(null);
-      setShowForm(false);
+
+      resetForm();
       fetchUsers();
     } catch (err) {
       setError(err.message);
@@ -64,172 +86,254 @@ const Users = () => {
   };
 
   const handleEdit = (user) => {
-    setFormData({ civilite: user.civilite || '', nom: user.nom, prenom: user.prenom, grade: user.grade, login: '', password: '' });
+    setFormData({
+      civilite: user.civilite || '',
+      nom: user.nom,
+      prenom: user.prenom,
+      grade: user.grade,
+      password: ''
+    });
     setEditingId(user.id);
     setShowForm(true);
   };
 
   const handleEditCredentials = async (user) => {
-    const newLogin = prompt('Nouveau login:', user.login);
-    if (newLogin === null) return;
-    const newPassword = prompt('Nouveau mot de passe:', '');
+    const newLogin = prompt('Nouvel identifiant:', user.login);
+    if (!newLogin) return;
+    
+    const newPassword = prompt('Nouveau mot de passe:');
     if (newPassword === null) return;
-    if (!newLogin || !newPassword) {
-      alert('Login et mot de passe requis');
+    
+    if (!newLogin.trim() || !newPassword.trim()) {
+      alert('Identifiant et mot de passe requis');
       return;
     }
+
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/users/${user.id}/credentials`, {
+      const response = await fetch(`/api/users/${user.id}/credentials`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ login: newLogin, password: newPassword }),
+        body: JSON.stringify({ login: newLogin, password: newPassword })
       });
-      if (!res.ok) {
-        const err = await res.json();
+
+      if (!response.ok) {
+        const err = await response.json();
         throw new Error(err.error || 'Erreur');
       }
-      alert('Identifiants mis à jour');
+
+      alert('✅ Identifiants mis à jour');
       fetchUsers();
     } catch (err) {
-      alert(err.message);
+      alert('❌ ' + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer utilisateur ?')) return;
+    if (!window.confirm('Désactiver cet utilisateur?')) return;
+    
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/users/${id}`, { 
+      const response = await fetch(`/api/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erreur suppression');
+
+      if (!response.ok) throw new Error('Erreur suppression');
+      
       fetchUsers();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  if (loading) return <div>Chargement utilisateurs...</div>;
-  if (error) return <div className="error">Erreur: {error}</div>;
+  const resetForm = () => {
+    setFormData({ civilite: '', nom: '', prenom: '', grade: '', login: '', password: '' });
+    setEditingId(null);
+    setShowForm(false);
+    setError('');
+  };
+
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  if (loading) return <div className="loading">Chargement des utilisateurs...</div>;
 
   return (
     <div className="users-container">
-      <h2>Administration Utilisateurs</h2>
-      <button onClick={() => setShowForm(true)} className="add-btn">
-        + Nouvel utilisateur
-      </button>
-      
+      <header className="users-header">
+        <h2>Administration des Utilisateurs</h2>
+        <button onClick={() => setShowForm(true)} className="add-btn">
+          + Nouvel utilisateur
+        </button>
+      </header>
+
+      {error && <div className="error" role="alert">{error}</div>}
+
       {showForm && (
         <form onSubmit={handleSubmit} className="user-form">
-          <h3>{editingId ? 'Modifier' : 'Créer'} utilisateur</h3>
-          <div className="form-group">
-            <label>Echelon</label>
-            <input
-              type="text"
-              value={formData.civilite}
-              onChange={(e) => setFormData({...formData, civilite: e.target.value})}
-              maxlength="30"
-            />
+          <h3>{editingId ? 'Modifier' : 'Créer'} un utilisateur</h3>
+
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="civilite">Échelon</label>
+              <input
+                id="civilite"
+                name="civilite"
+                type="text"
+                value={formData.civilite}
+                onChange={handleChange}
+                maxLength={30}
+                placeholder="Ex: M."
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="nom">Nom *</label>
+              <input
+                id="nom"
+                name="nom"
+                type="text"
+                value={formData.nom}
+                onChange={handleChange}
+                required
+                placeholder="Nom de famille"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="prenom">Prénom *</label>
+              <input
+                id="prenom"
+                name="prenom"
+                type="text"
+                value={formData.prenom}
+                onChange={handleChange}
+                required
+                placeholder="Prénom"
+              />
+            </div>
+
+            {!editingId && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="login">Identifiant *</label>
+                  <input
+                    id="login"
+                    name="login"
+                    type="text"
+                    value={formData.login}
+                    onChange={handleChange}
+                    required
+                    placeholder="Identifiant de connexion"
+                    autoComplete="off"
+                  />
+                  <small className="help-text">L'identifiant doit être unique</small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="password">Mot de passe *</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      placeholder="Mot de passe sécurisé"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <small className="help-text">Minimum 6 caractères recommandé</small>
+                </div>
+              </>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="grade">Niveau *</label>
+              <select
+                id="grade"
+                name="grade"
+                value={formData.grade}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Sélectionner un niveau</option>
+                {GRADE_OPTIONS
+                  .filter(grade => isSuperAdmin || grade === 'Vérificateur')
+                  .map(grade => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+              </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label>Nom *</label>
-            <input
-              value={formData.nom}
-              onChange={(e) => setFormData({...formData, nom: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Prénom *</label>
-            <input
-              value={formData.prenom}
-              onChange={(e) => setFormData({...formData, prenom: e.target.value})}
-              required
-            />
-          </div>
-          {!editingId && (
-            <>
-              <div className="form-group">
-                <label>Login (optionnel)</label>
-                <input
-                  type="text"
-                  value={formData.login}
-                  onChange={(e) => setFormData({...formData, login: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label>Mot de passe (optionnel)</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                />
-              </div>
-            </>
-          )}
-          <div className="form-group">
-            <label>Niveau *</label>
-            <select
-              value={formData.grade}
-              onChange={(e) => setFormData({...formData, grade: e.target.value})}
-              required
-            >
-              <option value="">Sélectionner grade</option>
-              <option value="Administrateur">Administrateur</option>
-              <option value="Vérificateur">Vérificateur</option>
-            </select>
-          </div>
+
           <div className="form-buttons">
-            <button type="submit">Sauvegarder</button>
-            <button type="button" onClick={() => {setShowForm(false); setEditingId(null); setFormData({});}}>
+            <button type="submit" className="save-btn">
+              {editingId ? 'Modifier' : 'Créer'}
+            </button>
+            <button type="button" onClick={resetForm} className="cancel-btn">
               Annuler
             </button>
           </div>
         </form>
       )}
 
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Echelon</th>
-            <th>Login</th>
-            <th>Mot de passe</th>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Niveau</th>
-            <th>Créé le</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.civilite || ''}</td>
-              <td>{user.login}</td>
-              <td>{user.plain_password || '***'}</td>
-              <td>{user.nom}</td>
-              <td>{user.prenom}</td>
-              <td>{user.grade}</td>
-              <td>{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
-              <td>
-                <button onClick={() => handleEdit(user)} className="edit-btn" title="Modifier profil">✏️</button>
-                <button onClick={() => handleEditCredentials(user)} className="credentials-btn" title="Modifier identifiants">🔑</button>
-                <button onClick={() => handleDelete(user.id)} className="delete-btn">🗑️</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {users.length === 0 ? (
+        <p className="no-data">Aucun utilisateur trouvé.</p>
+      ) : (
+        <div className="table-container">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Échelon</th>
+                <th>Identifiant</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Niveau</th>
+                <th>Créé le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.civilite || '-'}</td>
+                  <td><code>{user.login}</code></td>
+                  <td>{user.nom}</td>
+                  <td>{user.prenom}</td>
+                  <td>
+                    <span className={`badge badge-${user.grade === 'Administrateur' ? 'admin' : 'user'}`}>
+                      {user.grade}
+                    </span>
+                  </td>
+                  <td>{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
+                  <td className="actions">
+                    <button onClick={() => handleEdit(user)} className="edit-btn" title="Modifier">
+                      ✏️
+                    </button>
+                    <button onClick={() => handleEditCredentials(user)} className="key-btn" title="Modifier identifiants">
+                      🔑
+                    </button>
+                    <button onClick={() => handleDelete(user.id)} className="delete-btn" title="Désactiver">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Users;
-
+export default React.memo(Users);

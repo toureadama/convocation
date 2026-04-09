@@ -1,48 +1,76 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import './Results.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Use backend URL directly for PDF links
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const ResultsComponent = ({ results }) => {
-  if (!results.length) return null;
+const Results = ({ results }) => {
+  const handlePreview = useCallback((result) => {
+    const url = `${API_BASE_URL}/output/${result.filename}`;
+    window.open(url, '_blank');
+  }, []);
 
-  const token = localStorage.getItem('token');
+  const handleDownload = useCallback((result) => {
+    const url = `${API_BASE_URL}/output/${result.filename}`;
+    
+    fetch(url)
+      .then(response => {
+        if (!response.ok) throw new Error('File not found');
+        return response.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = result.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      })
+      .catch(err => {
+        console.error('Download error:', err);
+        window.open(url, '_blank');
+      });
+  }, []);
 
-  const handlePreview = (result) => {
-    window.open(`${API_URL}/output/${result.filename}`, '_blank');
-  };
-
-  const handleDownload = (result) => {
-    const url = `${API_URL}/output/${result.filename}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = result.filename;
-    link.type = 'application/pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  if (!results || results.length === 0) return null;
 
   return (
     <div className="results-container">
-      <h2>Résultats Génération</h2>
-      <p>{results.length} fichier(s) PDF créé(s)</p>
-      
+      <header className="results-header">
+        <h2>Résultats</h2>
+        <span className="badge">{results.length} fichier(s) généré(s)</span>
+      </header>
+
       <div className="results-list">
         {results.map((result, index) => (
           <div key={index} className="result-item">
             <div className="file-info">
-              <div className="file-name">{result.filename}</div>
+              <span className="file-icon">📄</span>
+              <span className="file-name">{result.filename}</span>
             </div>
+
             <div className="result-actions">
-              <button onClick={() => handlePreview(result)} className="preview-btn" title="Aperçu">
+              <button
+                onClick={() => handlePreview(result)}
+                className="preview-btn"
+                title="Aperçu dans un nouvel onglet"
+              >
                 👁️ Aperçu
               </button>
-              <button onClick={() => handleDownload(result)} className="download-btn" title="Télécharger">
+              <button
+                onClick={() => handleDownload(result)}
+                className="download-btn"
+                title="Télécharger le PDF"
+              >
                 📥 PDF
               </button>
             </div>
-            <span className="status success">✅ OK</span>
+
+            <span className="status success" title="Généré avec succès">
+              ✅
+            </span>
           </div>
         ))}
       </div>
@@ -50,7 +78,4 @@ const ResultsComponent = ({ results }) => {
   );
 };
 
-// Memoize for perf (prevents re-render if results unchanged)
-const Results = React.memo(ResultsComponent);
-export default Results;
-
+export default React.memo(Results);

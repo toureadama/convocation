@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './CodeAgre.css';
-
-const API_URL = process.env.REACT_APP_API_URL
 
 const CodeAgre = () => {
   const [companies, setCompanies] = useState([]);
@@ -9,32 +7,41 @@ const CodeAgre = () => {
   const [error, setError] = useState('');
   const [newCC, setNewCC] = useState('');
   const [newSociete, setNewSociete] = useState('');
+  const [editingCC, setEditingCC] = useState(null);
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/code_agree`, {
+      const response = await fetch('/api/code_agree', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erreur chargement');
-      const data = await res.json();
+      
+      if (!response.ok) throw new Error('Erreur chargement');
+      
+      const data = await response.json();
       setCompanies(data.companies || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [fetchCompanies]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    
+    if (!newCC.trim() || !newSociete.trim()) {
+      alert('Code et société requis');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('${API_URL}/api/code_agree', {
+      const response = await fetch('/api/code_agree', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,105 +49,172 @@ const CodeAgre = () => {
         },
         body: JSON.stringify({ cc: newCC.trim(), societe: newSociete.trim() })
       });
-      if (res.ok) {
-        setNewCC('');
-        setNewSociete('');
-        fetchCompanies();
-        alert('Code agréé ajouté');
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Erreur');
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur ajout');
       }
+
+      setNewCC('');
+      setNewSociete('');
+      fetchCompanies();
     } catch (err) {
-      alert('Erreur réseau');
+      alert('❌ ' + err.message);
+    }
+  };
+
+  const handleUpdate = async (cc, newSociete) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/code_agree/${cc}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ societe: newSociete })
+      });
+
+      if (!response.ok) throw new Error('Erreur mise à jour');
+      
+      setEditingCC(null);
+      fetchCompanies();
+    } catch (err) {
+      alert('❌ ' + err.message);
     }
   };
 
   const handleDelete = async (cc) => {
-    if (!window.confirm(`Supprimer ${cc}?`)) return;
+    if (!window.confirm(`Supprimer le code ${cc}?`)) return;
+    
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/code_agree/${cc}`, {
+      const response = await fetch(`/api/code_agree/${cc}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        fetchCompanies();
-      }
+
+      if (!response.ok) throw new Error('Erreur suppression');
+      
+      fetchCompanies();
     } catch (err) {
-      window.alert('Erreur suppression');
+      alert('❌ ' + err.message);
     }
   };
 
-  if (loading) return <div>Chargement codes agréés...</div>;
-  if (error) return <div className="error">Erreur: {error}</div>;
+  if (loading) return <div className="loading">Chargement des codes agréés...</div>;
 
   return (
-    <div className="users-container">
-      <h2>Codes Agréés (Admin)</h2>
-      
-      {/* Add Form */}
+    <div className="code-agre-container">
+      <header className="code-agre-header">
+        <h2>Gestion des Codes Agréés</h2>
+      </header>
+
+      {error && <div className="error" role="alert">{error}</div>}
+
       <form onSubmit={handleAdd} className="add-form">
+        <h3>Ajouter un code agréé</h3>
         <div className="form-grid">
-          <input
-            placeholder="Code Agréé (ex: 00231D)"
-            value={newCC}
-            onChange={(e) => setNewCC(e.target.value)}
-            required
-          />
-          <input
-            placeholder="Société"
-            value={newSociete}
-            onChange={(e) => setNewSociete(e.target.value)}
-            required
-          />
-          <button type="submit" className="add-btn">Ajouter</button>
+          <div className="form-group">
+            <label htmlFor="cc">Code Agréé *</label>
+            <input
+              id="cc"
+              type="text"
+              placeholder="Ex: 00231D"
+              value={newCC}
+              onChange={(e) => setNewCC(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="societe">Société *</label>
+            <input
+              id="societe"
+              type="text"
+              placeholder="Nom de la société"
+              value={newSociete}
+              onChange={(e) => setNewSociete(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="add-btn">
+            ➕ Ajouter
+          </button>
         </div>
       </form>
 
-      {/* List */}
-      <div className="table-container">
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Code Agréé</th>
-              <th>Société</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map((company) => (
-              <tr key={company.cc}>
-                <td>{company.cc}</td>
-<td><input value={company.societe} onChange={(e) => {
-  const newSociete = e.target.value;
-  fetch(`${API_URL}/api/code_agree/${company.cc}`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({societe: newSociete})
-  }).then(() => fetchCompanies());
-}} className="edit-input" /></td>
-                <td>
-                  <button 
-                    onClick={() => handleDelete(company.cc)}
-                    className="delete-btn"
-                  >
-                    Supprimer
-                  </button>
-                </td>
+      {companies.length === 0 ? (
+        <p className="no-data">Aucun code agréé enregistré.</p>
+      ) : (
+        <div className="table-container">
+          <table className="companies-table">
+            <thead>
+              <tr>
+                <th>Code Agréé</th>
+                <th>Société</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {companies.length === 0 && <p>Aucun code agréé. Ajoutez-en !</p>}
-      </div>
+            </thead>
+            <tbody>
+              {companies.map((company) => (
+                <tr key={company.cc}>
+                  <td><code>{company.cc}</code></td>
+                  <td>
+                    {editingCC === company.cc ? (
+                      <div className="edit-inline">
+                        <input
+                          type="text"
+                          value={company.societe}
+                          onChange={(e) => {
+                            setCompanies(prev =>
+                              prev.map(c => c.cc === company.cc ? { ...c, societe: e.target.value } : c)
+                            );
+                          }}
+                          autoFocus
+                        />
+                        <button onClick={() => handleUpdate(company.cc, company.societe)} className="save-btn">
+                          ✓
+                        </button>
+                        <button onClick={() => {
+                          setEditingCC(null);
+                          fetchCompanies();
+                        }} className="cancel-btn">
+                          ✗
+                        </button>
+                      </div>
+                    ) : (
+                      <span
+                        className="editable"
+                        onClick={() => setEditingCC(company.cc)}
+                        title="Cliquer pour modifier"
+                      >
+                        {company.societe}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDelete(company.cc)}
+                      className="delete-btn"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="table-footer">{companies.length} code(s) agré(s) enregistré(s)</p>
+        </div>
+      )}
 
       <button onClick={fetchCompanies} className="refresh-btn">
-        Rafraîchir
+        🔄 Rafraîchir
       </button>
     </div>
   );
 };
 
-export default CodeAgre;
-
+export default React.memo(CodeAgre);

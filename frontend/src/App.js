@@ -1,59 +1,77 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import './App.css';
+
+// Lazy-loaded components for better initial load performance
 const Form = lazy(() => import('./components/Form'));
 const Results = lazy(() => import('./components/Results'));
 const History = lazy(() => import('./components/History'));
 const Users = lazy(() => import('./components/Users'));
 const Login = lazy(() => import('./components/Login'));
 const CodeAgre = lazy(() => import('./components/CodeAgre'));
-import './App.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const TABS = {
+  GENERATE: 'generate',
+  HISTORY: 'history',
+  ADMIN: 'admin',
+  CODE_AGRE: 'code_agre'
+};
+
+const ROLES = {
+  VERIFICATEUR: 'Vérificateur',
+  ADMINISTRATEUR: 'Administrateur',
+  SUPER_ADMIN: 'Super Administrateur'
+};
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [user, setUser] = useState(null);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0); // New: 0-100 progress
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState('generate');
-  const [loginError, setLoginError] = useState('');
+  const [activeTab, setActiveTab] = useState(TABS.GENERATE);
 
-  // Simulate progress during generation
-  const simulateProgress = () => {
-    setProgress(10); // Init
-    setTimeout(() => setProgress(40), 800); // Processing CSV
-    setTimeout(() => setProgress(70), 2000); // Generating PDFs
-    setTimeout(() => setProgress(100), 3500); // Complete
-  };
-
+  // Verify token validity on mount
   useEffect(() => {
-    if (token) {
-      fetch(`${API_URL}/api/verify`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then(async res => {
-        if (!res.ok) {
-          localStorage.removeItem('token');
-          setToken(null);
+    if (!token) return;
+
+    const verifyToken = async () => {
+      try {
+        const response = await fetch('/api/verify', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+          handleLogout();
         }
-      }).catch(() => {
-        localStorage.removeItem('token');
-        setToken(null);
-      });
-    }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        handleLogout();
+      }
+    };
+
+    verifyToken();
   }, [token]);
 
   const handleLogin = (newToken, userData) => {
     setToken(newToken);
     setUser(userData);
     localStorage.setItem('token', newToken);
-    setLoginError('');
   };
 
   const handleLogout = () => {
     setToken(null);
     setUser(null);
+    setResults([]);
+    setError('');
     localStorage.removeItem('token');
+  };
+
+  const simulateProgress = () => {
+    setProgress(10);
+    setTimeout(() => setProgress(40), 800);
+    setTimeout(() => setProgress(70), 2000);
+    setTimeout(() => setProgress(100), 3500);
   };
 
   const handleGenerate = async (formData) => {
@@ -61,38 +79,45 @@ function App() {
     setError('');
     setResults([]);
     setProgress(0);
-    simulateProgress(); // Start simulation parallel to API
+    simulateProgress();
 
     try {
       const params = new URLSearchParams(formData);
-      const controller = new AbortController(); // Opt: Cancelable
-      const response = await fetch(`${API_URL}/api/generate`, {
+      const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Authorization': `Bearer ${token}`
         },
-        body: params,
-        signal: controller.signal,
+        body: params
       });
 
-      if (!response.ok) throw new Error(`Erreur: ${response.status}`);
-      
+      if (!response.ok) {
+        throw new Error(`Erreur serveur: ${response.status}`);
+      }
+
       const data = await response.json();
       setResults(data.results || []);
-      setProgress(100); // Ensure 100% on success
+      setProgress(100);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Erreur lors de la génération');
       setProgress(0);
     } finally {
       setLoading(false);
     }
   };
 
+  const userRole = user?.role || user?.grade;
+  const isAdmin = userRole === ROLES.ADMINISTRATEUR;
+  const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
+  const canManageUsers = isAdmin || isSuperAdmin;
+  const canViewAllHistory = isSuperAdmin;
+
+  // Login screen
   if (!token) {
     return (
-      <Suspense fallback={<div>Chargement...</div>}>
-        <Login onLogin={handleLogin} error={loginError} />
+      <Suspense fallback={<div className="loading">Chargement...</div>}>
+        <Login onLogin={handleLogin} />
       </Suspense>
     );
   }
@@ -102,75 +127,69 @@ function App() {
       <header className="App-header">
         <h1>Générateur Convocations Douanes CI</h1>
         <div className="user-info">
-          Bonjour, <strong>{user?.nom} {user?.prenom}</strong> ({user?.grade})
-          <button onClick={handleLogout} className="logout-btn">Déconnexion</button>
+          <span>
+            Bonjour, <strong>{user?.nom} {user?.prenom}</strong> ({userRole})
+          </span>
+          <button onClick={handleLogout} className="logout-btn">
+            Déconnexion
+          </button>
         </div>
       </header>
+
+      <nav className="tabs">
+        <button
+          className={activeTab === TABS.GENERATE ? 'tab-active' : 'tab'}
+          onClick={() => setActiveTab(TABS.GENERATE)}
+        >
+          Générer
+        </button>
+        <button
+          className={activeTab === TABS.HISTORY ? 'tab-active' : 'tab'}
+          onClick={() => setActiveTab(TABS.HISTORY)}
+        >
+          Historique
+        </button>
+        {canManageUsers && (
+          <button
+            className={activeTab === TABS.ADMIN ? 'tab-active' : 'tab'}
+            onClick={() => setActiveTab(TABS.ADMIN)}
+          >
+            Admin Utilisateurs
+          </button>
+        )}
+        {canManageUsers && (
+          <button
+            className={activeTab === TABS.CODE_AGRE ? 'tab-active' : 'tab'}
+            onClick={() => setActiveTab(TABS.CODE_AGRE)}
+          >
+            Codes Agréés
+          </button>
+        )}
+      </nav>
+
       <main>
-        <div className="tabs">
-          <button 
-            className={tab === 'generate' ? 'tab-active' : 'tab'}
-            onClick={() => setTab('generate')}
-          >
-            Générer
-          </button>
-          <button 
-            className={tab === 'history' ? 'tab-active' : 'tab'}
-            onClick={() => setTab('history')}
-          >
-            Historique
-          </button>
-          {user?.grade === 'Administrateur' && (
+        <Suspense fallback={<div className="loading">Chargement...</div>}>
+          {activeTab === TABS.GENERATE && (
             <>
-              <button 
-                className={tab === 'admin' ? 'tab-active' : 'tab'}
-                onClick={() => setTab('admin')}
-              >
-                Admin Utilisateurs
-              </button>
-              <button 
-                className={tab === 'code_agre' ? 'tab-active' : 'tab'}
-                onClick={() => setTab('code_agre')}
-              >
-                Codes Agréés
-              </button>
+              <Form
+                onGenerate={handleGenerate}
+                loading={loading}
+                progress={progress}
+                currentUser={user}
+              />
+              {error && <div className="error">{error}</div>}
+              <Results results={results} />
             </>
           )}
-        </div>
-        
-        {tab === 'generate' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <Form 
-              onGenerate={handleGenerate} 
-              loading={loading} 
-              progress={progress} 
-              currentUser={user} 
-            />
-            {error && <div className="error">{error}</div>}
-            <Results results={results} />
-          </Suspense>
-        )}
-        
-        {tab === 'history' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <History user={user} />
-          </Suspense>
-        )}
-        
-        {tab === 'admin' && user?.grade === 'Administrateur' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <Users />
-          </Suspense>
-        )}
-        {tab === 'code_agre' && user?.grade === 'Administrateur' && (
-          <Suspense fallback={<div>Chargement...</div>}>
-            <CodeAgre />
-          </Suspense>
-        )}
+
+          {activeTab === TABS.HISTORY && <History user={user} canViewAll={canViewAllHistory} />}
+          
+          {canManageUsers && activeTab === TABS.ADMIN && <Users currentUserRole={userRole} />}
+          {canManageUsers && activeTab === TABS.CODE_AGRE && <CodeAgre />}
+        </Suspense>
       </main>
     </div>
   );
 }
 
 export default App;
-

@@ -28,6 +28,24 @@
   border-radius: 4px;
 }
 
+.form-group small.help-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: #666;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
 .form-buttons {
   display: flex;
   gap: 10px;

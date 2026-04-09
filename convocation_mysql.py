@@ -8,7 +8,7 @@ from typing import Tuple
 
 import pandas as pd
 from docxtpl import DocxTemplate
-import subprocess
+from docx2pdf import convert
 from db_config import get_db_connection, close_connection
 
 class ConvocationGenerator:
@@ -17,6 +17,35 @@ class ConvocationGenerator:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.doc = DocxTemplate(self.template_path)
+        
+    def _get_civilite_by_verif(self, verificateur: str):
+        """Find user civilité by full name (verificateur) in users table."""
+        conn = get_db_connection()
+        if not conn:
+            raise ValueError("MySQL connection failed")
+        cursor = conn.cursor(dictionary=True)
+
+        # Split verificateur name into parts (e.g., "TOURE ADAMA" -> ["TOURE", "ADAMA"])
+        name_parts = verificateur.strip().split()
+        if len(name_parts) < 2:
+            close_connection(conn)
+            raise ValueError(f'Invalid verificateur name format: {verificateur}. Expected "NOM PRENOM"')
+
+        nom = name_parts[0]
+        prenom = ' '.join(name_parts[1:])
+
+        # Search by nom and prenom
+        cursor.execute(
+            'SELECT civilite, nom, prenom FROM users WHERE nom = %s AND prenom = %s AND is_active = 1',
+            (nom, prenom)
+        )
+        user = cursor.fetchone()
+        close_connection(conn)
+
+        if not user:
+            raise ValueError(f'User {nom} {prenom} not found in users table')
+
+        return dict(user)
 
     def _get_initiales(self, verificateur: str) -> str:
         return ''.join(word[0].upper() for word in verificateur.split() if word)
@@ -25,26 +54,41 @@ class ConvocationGenerator:
         return "Chef de Visite" if signature_admin=="COULIBALY KARIM" else "Chef de Visite Adjoint"
 
     def _get_company_by_cc(self, cc: str):
-        """Replace CSV lookup with DB query"""
         conn = get_db_connection()
         if not conn:
-            raise ValueError("Database connection failed")
+            raise ValueError("MySQL connection failed")
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT cc, societe FROM code_agree WHERE cc = %s LIMIT 1", (cc,))
         row = cursor.fetchone()
         close_connection(conn)
         if not row:
-            raise ValueError(f'CC {cc} not found in code_agree table')
-        return row
+            raise ValueError(f'CC {cc} not found in code_agree')
+        return dict(row)
 
-    def generate(self, cc: str, verificateur: str = '', num_declaration: str = '', date_declaration: str = '', fraude: str = '', signature_admin: str = '', num_convoc: str = '0001') -> Tuple[str, str]:
+    def _get_operateur_by_imp(self, imp: str):
+        conn = get_db_connection()
+        if not conn:
+            raise ValueError("MySQL connection failed")
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT code_operateur, nom_operateur FROM operateur WHERE code_operateur = %s LIMIT 1", (imp,))
+        row_imp = cursor.fetchone()
+        close_connection(conn)
+        if not row_imp:
+            raise ValueError(f'code_operateur {imp} not found in operateur')
+        return dict(row_imp )
+
+    def generate(self, cc: str, code_imp: str, verificateur: str = '', type_dossier: str = '', num_declaration: str = '', date_declaration: str = '', fraude: str = '', signature_admin: str = '', num_convoc: str = '0001') -> Tuple[str, str]:
         row = self._get_company_by_cc(cc)
+        row_imp = self._get_operateur_by_imp(code_imp)
         initiales = self._get_initiales(verificateur)
+        civilite = self._get_civilite_by_verif(verificateur)
+        Init_Adm  = self._get_initiales(signature_admin)
         chef = self._get_chef(signature_admin)
-        annee = pd.Timestamp.now().year
+        annee = pd.Timestamp.now().strftime('%Y')
         FRAUDE_MAP = {
             'FDE': 'FAUSSE DECLARATION ESPECE',
             'FDV': 'FAUSSE DECLARATION VALEUR', 
+            'ESP': 'ENLEVEMENT SANS PERMIS',
             'EXC': 'EXCEDENT'
         }
         
@@ -53,13 +97,17 @@ class ConvocationGenerator:
         context = {
             'compte_contribuale': row['cc'],
             'societe': row['societe'],
+            'code_operateur': row_imp['code_operateur'],
+            'operateur': row_imp['nom_operateur'],
             'verificateur': verificateur,
+            'init_adm': Init_Adm,
             'initiales': initiales,
             'num_convoc': num_convoc,
             'num_declaration': num_declaration,
             'date_declaration': date_declaration,
             'fraude': fraude_libelle,
             'date': pd.Timestamp.now().strftime('%d/%m/%Y'),
+            'numMY': pd.Timestamp.now().strftime('%m/%Y'),
             'annee': annee,
             'administrateur': signature_admin,
             'chef': chef
@@ -73,46 +121,44 @@ class ConvocationGenerator:
 
         self.doc.save(docx_path)
         
-        
-        # Conversion via LibreOffice (Render compatible)
+        # Windows-friendly PDF conversion with docx2pdf
         try:
-            subprocess.run([
-                "libreoffice",
-                "--headless",
-                "--convert-to", "pdf",
-                str(docx_path),
-                "--outdir",
-                str(self.output_dir)
-            ], check=True, timeout=30)
-
-            logging.info(f'PDF généré : {pdf_path}')
-
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Erreur conversion PDF: {e}")
-            raise RuntimeError("Conversion PDF échouée")
+            convert(str(docx_path), str(pdf_path))
+            logging.info(f'PDF generated: {pdf_path}')
+            
+            # Remove DOCX file after successful PDF conversion
+            if os.path.exists(docx_path):
+                os.remove(docx_path)
+                logging.info(f'DOCX removed: {docx_path}')
+        except Exception as e:
+            logging.error(f"PDF conversion failed: {e}")
+            raise RuntimeError("docx2pdf conversion failed. Install MS Word or LibreOffice.")
         
-        print(f'[1/1] OK : {pdf_path}')
+        print(f'OK : {pdf_path}')
         
         return str(docx_path), str(pdf_path)
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Générateur convocation single CC - MySQL edition.')
-    parser.add_argument('--cc', required=True, help='N° Compte Contribuable')
+    parser = argparse.ArgumentParser(description='Générateur convocation SQLite local.')
+    parser.add_argument('--cc', required=True, help='N° Code Déclarant')
+    parser.add_argument('--code_imp', required=True, help='N° Code Opérateur')
     parser.add_argument('--verificateur', required=True)
+    parser.add_argument('--type_dossier', required=True, help='Type de dossier (BDAP/DARRV)')
     parser.add_argument('--num_declaration', required=True)
     parser.add_argument('--date_declaration', required=True)
     parser.add_argument('--fraude', required=True)
     parser.add_argument('--signature_admin', required=True)
-    parser.add_argument('--num_convoc', default='0001', help='Numéro convocation (0001)')
+    parser.add_argument('--num_convoc', default='0001')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     gen = ConvocationGenerator()
-    gen.generate(args.cc, args.verificateur, args.num_declaration, args.date_declaration, args.fraude, args.signature_admin, args.num_convoc)
-    print('Convocation générée avec succès! MySQL code_agree used.')
-
+    try:
+        gen.generate(args.cc, args.code_imp, args.verificateur, args.type_dossier, args.num_declaration, args.date_declaration, args.fraude, args.signature_admin, args.num_convoc)
+    except Exception as e:
+        logging.error(f"Generation failed: {e}")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
-

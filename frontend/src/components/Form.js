@@ -1,72 +1,145 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Form.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const FRAUDE_OPTIONS = [
+  { value: 'FDE', label: 'FAUSSE DECLARATION ESPECES' },
+  { value: 'FDV', label: 'FAUSSE DECLARATION VALEURS' },
+  { value: 'ESP', label: 'ENLEVEMENT SANS PERMIS' },
+  { value: 'EXC', label: 'EXCEDENT' }
+];
 
-const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added progress prop
+const ADMIN_SIGNATURES = [
+  'COULIBALY KARIM',
+  'COULIBALY SITA'
+];
+
+const DOSSIER_TYPES = [
+  { value: 'BDAP', label: 'BDAP' },
+  { value: 'DARRV', label: 'DARRV' }
+];
+
+const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
   const [formData, setFormData] = useState({
-    csv: 'CODE_AGREE.csv',
     cc: '',
-    verificateur: currentUser ? `${currentUser.civilite || ''} ${currentUser.nom} ${currentUser.prenom}`.trim() : '',
+    code_imp: '',
+    verificateur: '',
     num_declaration: '',
     date_declaration: '',
-    fraude: '',
-    signature_admin: '',
+    type_dossier: '',
+    objet: '',
+    signature_admin: ''
   });
+
   const [companies, setCompanies] = useState([]);
-  const [societeDisplay, setSocieteDisplay] = useState('');
-  const [companiesLoading, setCompaniesLoading] = useState(true);
+  const [operateurs, setOperateurs] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedOperateur, setSelectedOperateur] = useState('');
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
+  const [isLoadingOperateurs, setIsLoadingOperateurs] = useState(true);
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
-    });
-    if (e.target.name === 'cc') {
-      // Opt: Simple find, no debounce needed for small list
-      const company = companies.find(c => c.cc === value);
-      setSocieteDisplay(company ? company.societe : '');
-    }
-  };
-
+  // Initialize verifier name from current user (nom + prenom only, no civilite)
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setCompaniesLoading(false);
-      return;
+    if (currentUser) {
+      // Only use nom and prenom - civilité will be looked up from DB
+      const fullName = [currentUser.nom, currentUser.prenom]
+        .filter(Boolean)
+        .join(' ');
+      setFormData(prev => ({ ...prev, verificateur: fullName }));
     }
-    fetch(`${API_URL}/api/companies`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (data.companies) {
-          setCompanies(data.companies);
+  }, [currentUser]);
+
+  // Load companies list
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsLoadingCompanies(false);
+          return;
         }
-        setCompaniesLoading(false);
-      })
-      .catch(err => {
+
+        const response = await fetch('/api/companies', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur chargement codes agréés: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCompanies(data.companies || []);
+      } catch (err) {
         console.error('Companies load error:', err);
-        setCompaniesLoading(false);
-      });
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    };
+
+    loadCompanies();
   }, []);
 
-  const handleSubmit = (e) => {
+  // Load operateurs list
+  useEffect(() => {
+    const loadOperateurs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsLoadingOperateurs(false);
+          return;
+        }
+
+        const response = await fetch('/api/operateurs', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur chargement opérateurs: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setOperateurs(data.operateurs || []);
+      } catch (err) {
+        console.error('Operateurs load error:', err);
+      } finally {
+        setIsLoadingOperateurs(false);
+      }
+    };
+
+    loadOperateurs();
+  }, []);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'cc') {
+      const company = companies.find(c => c.cc === value);
+      setSelectedCompany(company ? company.societe : '');
+    }
+    
+    if (name === 'code_imp') {
+      const operateur = operateurs.find(o => o.code_operateur === value);
+      setSelectedOperateur(operateur ? operateur.nom_operateur : '');
+    }
+  }, [companies, operateurs]);
+
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     onGenerate(formData);
-  };
+  }, [formData, onGenerate]);
+
+  const isFormValid = formData.cc && formData.code_imp && formData.verificateur &&
+                      formData.num_declaration && formData.date_declaration &&
+                      formData.type_dossier && formData.fraude && formData.signature_admin;
 
   return (
     <form onSubmit={handleSubmit} className="form-container">
-      <h2>Saisir Paramètres</h2>
-      
+      <h2>Paramètres de Convocation</h2>
+
       <div className="form-grid">
         <div className="form-group">
-          <label htmlFor="cc">Code Agréé (CA) *</label>
+          <label htmlFor="cc">Code Déclarant *</label>
           <input
             type="text"
             id="cc"
@@ -75,14 +148,36 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added 
             onChange={handleChange}
             list="cc-list"
             required
+            placeholder="Ex: 00069Z"
           />
           <datalist id="cc-list">
             {companies.map((company) => (
               <option key={company.cc} value={company.cc} />
             ))}
           </datalist>
-          {companiesLoading && <small>Chargement codes agréés...</small>}
-          {societeDisplay && <small>Société: {societeDisplay}</small>}
+          {isLoadingCompanies && <small className="loading-text">Chargement...</small>}
+          {selectedCompany && <small className="info-text">{selectedCompany}</small>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="code_imp">Code Opérateur *</label>
+          <input
+            type="text"
+            id="code_imp"
+            name="code_imp"
+            value={formData.code_imp}
+            onChange={handleChange}
+            list="code-imp-list"
+            required
+            placeholder="Ex: 1222798H"
+          />
+          <datalist id="code-imp-list">
+            {operateurs.map((operateur) => (
+              <option key={operateur.code_operateur} value={operateur.code_operateur} />
+            ))}
+          </datalist>
+          {isLoadingOperateurs && <small className="loading-text">Chargement...</small>}
+          {selectedOperateur && <small className="info-text">{selectedOperateur}</small>}
         </div>
 
         <div className="form-group">
@@ -93,11 +188,12 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added 
             value={formData.num_declaration}
             onChange={handleChange}
             required
+            placeholder="Ex: CIAB6C2998"
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="date_declaration">Date Déclaration * (dd/mm/yyyy)</label>
+          <label htmlFor="date_declaration">Date Déclaration *</label>
           <input
             id="date_declaration"
             name="date_declaration"
@@ -108,8 +204,24 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added 
           />
         </div>
 
-        <div className="form-group full">
-          <label htmlFor="fraude">Type Fraude *</label>
+        <div className="form-group">
+          <label htmlFor="type_dossier">Type de dossier *</label>
+          <select
+            id="type_dossier"
+            name="type_dossier"
+            value={formData.type_dossier}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Sélectionner un type</option>
+            {DOSSIER_TYPES.map(type => (
+              <option key={type.value} value={type.value}>{type.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group full-width">
+          <label htmlFor="fraude">Objet *</label>
           <select
             id="fraude"
             name="fraude"
@@ -117,10 +229,10 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added 
             onChange={handleChange}
             required
           >
-            <option value="">Sélectionner fraude</option>
-            <option value="FDE">FAUSSE DECLARATION ESPECES</option>
-            <option value="FDV">FAUSSE DECLARATION VALEURS</option>
-            <option value="EXC">EXCEDENT</option>
+            <option value="">Sélectionner un type</option>
+            {FRAUDE_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 
@@ -133,34 +245,41 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => { // Added 
             onChange={handleChange}
             required
           >
-            <option value="">Sélectionner admin</option>
-            <option value="COULIBALY KARIM">COULIBALY KARIM</option>
-            <option value="COULIBALY SITA">COULIBALY SITA</option>
+            <option value="">Sélectionner un admin</option>
+            {ADMIN_SIGNATURES.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
           </select>
         </div>
       </div>
 
-      {/* New Progress Bar */}
       {loading && (
         <div className="progress-section">
           <div className="progress-label">
             Génération en cours... {Math.round(progress)}%
           </div>
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${progress}%` }}
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
             />
           </div>
         </div>
       )}
 
-      <button type="submit" disabled={loading || !formData.cc} className="generate-btn">
-        {loading ? `Génration... ${Math.round(progress)}%` : 'Générer Convocation'}
+      <button
+        type="submit"
+        disabled={loading || !isFormValid}
+        className="generate-btn"
+      >
+        {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
       </button>
     </form>
   );
 };
 
-export default Form;
-
+export default React.memo(Form);
