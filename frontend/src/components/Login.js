@@ -29,7 +29,10 @@ const Login = ({ onLogin }) => {
         throw new Error(errorData.error || 'Identifiants invalides');
       }
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
+      if (!data?.token) {
+        throw new Error('Réponse serveur invalide');
+      }
       onLogin(data.token, data.user);
     } catch (err) {
       setError(err.message);
