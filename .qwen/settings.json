@@ -7,7 +7,11 @@
       "Bash(timeout *)",
       "Bash(taskkill *)",
       "Bash(py *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(python3 *)",
+      "Bash(tasklist)",
+      "Bash(findstr *)",
+      "Bash(del *)"
     ]
   },
   "$version": 3

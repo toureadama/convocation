@@ -142,7 +142,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             role VARCHAR(50) DEFAULT 'Vérificateur',
             signature_name TEXT
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''')
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
         cursor.execute('''CREATE TABLE IF NOT EXISTS history (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -164,18 +164,18 @@ def init_db():
             INDEX idx_user_login (user_login),
             INDEX idx_timestamp (timestamp),
             INDEX idx_cc (cc)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''')
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
         cursor.execute('''CREATE TABLE IF NOT EXISTS code_agree (
             cc VARCHAR(100) PRIMARY KEY,
             societe VARCHAR(255) NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''')
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
         cursor.execute('''CREATE TABLE IF NOT EXISTS operateur (
             id INT AUTO_INCREMENT PRIMARY KEY,
             code_operateur VARCHAR(100) UNIQUE NOT NULL,
             nom_operateur VARCHAR(255) NOT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4''')
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
         # Create default admin if not exists
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='admin'")
@@ -183,10 +183,10 @@ def init_db():
             password = 'admin123'
             password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             cursor.execute(
-                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password) VALUES (%s, %s, %s, %s, %s, %s)",
-                ('Admin', 'Super', 'Administrateur', 'admin', password_hash, '***')
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                ('Admin', 'Super', 'Administrateur', 'admin', password_hash, '***', 'Super Administrateur')
             )
-            logger.info("✅ Admin created: admin/admin123")
+            logger.info("✅ Admin created: admin/admin123 (Super Administrateur)")
 
         conn.commit()
         logger.info("✅ MySQL database initialized successfully")
