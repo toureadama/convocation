@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch, API_BASE_URL } from '../api';
 import './History.css';
 
 const DEFAULT_FILTERS = {
@@ -15,8 +16,6 @@ const PAGINATION = {
   limit: 10
 };
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 const History = ({ user, canViewAll }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,18 +31,10 @@ const History = ({ user, canViewAll }) => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Non authentifié. Veuillez vous connecter.');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/history`, {
+      const response = await apiFetch('/api/history', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           page,
@@ -51,15 +42,6 @@ const History = ({ user, canViewAll }) => {
           filters: isAdmin ? filters : {}
         })
       });
-
-      if (response.status === 401) {
-        // Token expired or invalid
-        console.warn('Authentication expired. Please login again.');
-        localStorage.removeItem('token');
-        setError('Session expirée. Veuillez vous reconnecter.');
-        setLoading(false);
-        return;
-      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -70,6 +52,11 @@ const History = ({ user, canViewAll }) => {
       const data = await response.json();
       setHistory(data.history || []);
     } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        setError('Session expirée. Veuillez vous reconnecter.');
+        window.location.reload();
+        return;
+      }
       setError(err.message);
       console.error('History fetch error:', err);
     } finally {
@@ -92,12 +79,10 @@ const History = ({ user, canViewAll }) => {
 
 const updateStatus = async (entryId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/history/${entryId}/status`, {
+      const response = await apiFetch(`/api/history/${entryId}/status`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ statut: newStatus })
       });
@@ -106,23 +91,24 @@ const updateStatus = async (entryId, newStatus) => {
         throw new Error('Erreur lors de la mise à jour');
       }
 
-      // Optimistic update
       setHistory(prev => prev.map(entry =>
         entry.id === entryId ? { ...entry, statut: newStatus } : entry
       ));
     } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
       alert(err.message);
     }
   };
 
   const updateField = async (entryId, field, value) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/history/${entryId}/fields`, {
+      const response = await apiFetch(`/api/history/${entryId}/fields`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ [field]: value })
       });
@@ -132,23 +118,24 @@ const updateStatus = async (entryId, newStatus) => {
         throw new Error(err.error || 'Erreur lors de la mise à jour');
       }
 
-      // Optimistic update
       setHistory(prev => prev.map(entry =>
         entry.id === entryId ? { ...entry, [field]: value } : entry
       ));
     } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
       alert(err.message);
     }
   };
 
   const handleExport = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/history/export`, {
+      const response = await apiFetch('/api/history/export', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ filters })
       });
@@ -160,7 +147,7 @@ const updateStatus = async (entryId, newStatus) => {
       const blob = await response.blob();
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
       const filename = `history_${timestamp}.csv`;
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

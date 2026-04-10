@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../api';
 import './Form.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const FRAUDE_OPTIONS = [
   { value: 'FDE', label: 'FAUSSE DECLARATION ESPECES' },
@@ -56,22 +55,11 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          // Not authenticated - skip loading
           setIsLoadingCompanies(false);
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/companies`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.status === 401) {
-          // Token expired or invalid - clear it
-          console.warn('Authentication expired. Please login again.');
-          localStorage.removeItem('token');
-          setIsLoadingCompanies(false);
-          return;
-        }
+        const response = await apiFetch('/api/companies');
 
         if (!response.ok) {
           throw new Error(`Erreur chargement codes agréés: ${response.status}`);
@@ -80,6 +68,10 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
         const data = await response.json();
         setCompanies(data.companies || []);
       } catch (err) {
+        if (err.message === 'SESSION_EXPIRED') {
+          window.location.reload();
+          return;
+        }
         console.error('Companies load error:', err);
       } finally {
         setIsLoadingCompanies(false);
@@ -95,22 +87,11 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          // Not authenticated - skip loading
           setIsLoadingOperateurs(false);
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/operateurs`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.status === 401) {
-          // Token expired or invalid - clear it
-          console.warn('Authentication expired. Please login again.');
-          localStorage.removeItem('token');
-          setIsLoadingOperateurs(false);
-          return;
-        }
+        const response = await apiFetch('/api/operateurs');
 
         if (!response.ok) {
           throw new Error(`Erreur chargement opérateurs: ${response.status}`);
@@ -119,6 +100,10 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
         const data = await response.json();
         setOperateurs(data.operateurs || []);
       } catch (err) {
+        if (err.message === 'SESSION_EXPIRED') {
+          window.location.reload();
+          return;
+        }
         console.error('Operateurs load error:', err);
       } finally {
         setIsLoadingOperateurs(false);

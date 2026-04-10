@@ -8,7 +8,8 @@ from typing import Tuple
 
 import pandas as pd
 from docxtpl import DocxTemplate
-from docx2pdf import convert
+import subprocess
+import shutil
 from db_config import get_db_connection, close_connection
 
 class ConvocationGenerator:
@@ -52,6 +53,59 @@ class ConvocationGenerator:
     
     def _get_chef(self, signature_admin: str) -> str:
         return "Chef de Visite" if signature_admin=="COULIBALY KARIM" else "Chef de Visite Adjoint"
+
+    def _convert_to_pdf(self, docx_path: str, pdf_path: str):
+        """Convert DOCX to PDF using LibreOffice headless mode (cross-platform)."""
+        # Find LibreOffice executable
+        libreoffice_paths = {
+            'linux': [
+                '/usr/bin/libreoffice',
+                '/usr/bin/soffice',
+                '/opt/libreoffice/program/soffice',
+            ],
+            'win32': [
+                r'C:\Program Files\LibreOffice\program\soffice.exe',
+                r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+            ],
+        }
+
+        soffice_exe = shutil.which('libreoffice') or shutil.which('soffice')
+
+        if not soffice_exe:
+            for path in libreoffice_paths.get(sys.platform, []):
+                if os.path.exists(path):
+                    soffice_exe = path
+                    break
+
+        if not soffice_exe:
+            raise FileNotFoundError(
+                "LibreOffice not found. Install it from https://www.libreoffice.org/"
+            )
+
+        # Convert using LibreOffice headless mode
+        output_dir = os.path.dirname(pdf_path) or '.'
+        cmd = [
+            soffice_exe,
+            '--headless',
+            '--convert-to', 'pdf',
+            '--outdir', output_dir,
+            docx_path
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env={**os.environ, 'HOME': os.path.expanduser('~')}
+        )
+
+        if result.returncode != 0:
+            raise RuntimeError(f"LibreOffice conversion failed: {result.stderr}")
+
+        # Verify output file exists
+        if not os.path.exists(pdf_path):
+            raise RuntimeError(f"PDF file not created after conversion: {pdf_path}")
 
     def _get_company_by_cc(self, cc: str):
         conn = get_db_connection()
@@ -120,19 +174,22 @@ class ConvocationGenerator:
         pdf_path = self.output_dir / pdf_name
 
         self.doc.save(docx_path)
-        
-        # Windows-friendly PDF conversion with docx2pdf
+
+        # Cross-platform PDF conversion using LibreOffice (works on Linux/Render & Windows)
         try:
-            convert(str(docx_path), str(pdf_path))
+            self._convert_to_pdf(str(docx_path), str(pdf_path))
             logging.info(f'PDF generated: {pdf_path}')
-            
+
             # Remove DOCX file after successful PDF conversion
             if os.path.exists(docx_path):
                 os.remove(docx_path)
                 logging.info(f'DOCX removed: {docx_path}')
+        except FileNotFoundError as e:
+            logging.error(f"PDF conversion failed - LibreOffice not found: {e}")
+            raise RuntimeError("LibreOffice is required for PDF conversion. Install it or use Windows with MS Word.")
         except Exception as e:
             logging.error(f"PDF conversion failed: {e}")
-            raise RuntimeError("docx2pdf conversion failed. Install MS Word or LibreOffice.")
+            raise RuntimeError(f"PDF conversion failed: {e}")
         
         print(f'OK : {pdf_path}')
         

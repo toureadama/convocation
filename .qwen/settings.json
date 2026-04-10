@@ -11,7 +11,9 @@
       "Bash(python3 *)",
       "Bash(tasklist)",
       "Bash(findstr *)",
-      "Bash(del *)"
+      "Bash(del *)",
+      "Bash(netstat *)",
+      "Bash(curl *)"
     ]
   },
   "$version": 3

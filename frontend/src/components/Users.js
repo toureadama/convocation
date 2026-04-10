@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch, handleResponse } from '../api';
 import './Users.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const GRADE_OPTIONS = ['Vérificateur', 'Administrateur', 'Super Administrateur'];
 
@@ -23,17 +22,15 @@ const Users = ({ currentUserRole }) => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!response.ok) throw new Error('Erreur chargement');
-      
-      const data = await response.json();
+      const response = await apiFetch('/api/users');
+      const data = await handleResponse(response);
       setUsers(data.users || []);
     } catch (err) {
-      setError(err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        setError('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -48,9 +45,8 @@ const Users = ({ currentUserRole }) => {
 
     try {
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `${API_BASE_URL}/api/users/${editingId}` : `${API_BASE_URL}/api/users`;
-      const token = localStorage.getItem('token');
-      
+      const url = editingId ? `/api/users/${editingId}` : '/api/users';
+
       const body = editingId
         ? { civilite: formData.civilite, nom: formData.nom, prenom: formData.prenom, grade: formData.grade }
         : {
@@ -62,17 +58,12 @@ const Users = ({ currentUserRole }) => {
             password: formData.password
           };
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(body)
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Erreur sauvegarde');
+      const result = await handleResponse(response);
 
       if (method === 'POST') {
         alert(`✅ Utilisateur créé avec succès!\n\nIdentifiant: ${result.login}\n\nL'utilisateur peut maintenant se connecter.`);
@@ -83,7 +74,11 @@ const Users = ({ currentUserRole }) => {
       resetForm();
       fetchUsers();
     } catch (err) {
-      setError(err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        setError('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        setError(err.message);
+      }
     }
   };
 
@@ -102,53 +97,48 @@ const Users = ({ currentUserRole }) => {
   const handleEditCredentials = async (user) => {
     const newLogin = prompt('Nouvel identifiant:', user.login);
     if (!newLogin) return;
-    
+
     const newPassword = prompt('Nouveau mot de passe:');
     if (newPassword === null) return;
-    
+
     if (!newLogin.trim() || !newPassword.trim()) {
       alert('Identifiant et mot de passe requis');
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/users/${user.id}/credentials`, {
+      const response = await apiFetch(`/api/users/${user.id}/credentials`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ login: newLogin, password: newPassword })
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Erreur');
-      }
-
+      await handleResponse(response);
       alert('✅ Identifiants mis à jour');
       fetchUsers();
     } catch (err) {
-      alert('❌ ' + err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        alert('⚠️ Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert('❌ ' + err.message);
+      }
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Désactiver cet utilisateur?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
 
-      if (!response.ok) throw new Error('Erreur suppression');
-      
+    try {
+      const response = await apiFetch(`/api/users/${id}`, {
+        method: 'DELETE'
+      });
+      await handleResponse(response);
       fetchUsers();
     } catch (err) {
-      setError(err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        setError('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        setError(err.message);
+      }
     }
   };
 

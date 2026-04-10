@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch, handleResponse } from '../api';
 import './CodeAgre.css';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const CodeAgre = () => {
   const [companies, setCompanies] = useState([]);
@@ -13,17 +12,15 @@ const CodeAgre = () => {
 
   const fetchCompanies = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/code_agree`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!response.ok) throw new Error('Erreur chargement');
-      
-      const data = await response.json();
+      const response = await apiFetch('/api/code_agree');
+      const data = await handleResponse(response);
       setCompanies(data.companies || []);
     } catch (err) {
-      setError(err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        setError('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -35,73 +32,64 @@ const CodeAgre = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    
+
     if (!newCC.trim() || !newSociete.trim()) {
       alert('Code et société requis');
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/code_agree`, {
+      const response = await apiFetch('/api/code_agree', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ cc: newCC.trim(), societe: newSociete.trim() })
       });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Erreur ajout');
-      }
-
+      await handleResponse(response);
       setNewCC('');
       setNewSociete('');
       fetchCompanies();
     } catch (err) {
-      alert('❌ ' + err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        alert('⚠️ Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert('❌ ' + err.message);
+      }
     }
   };
 
   const handleUpdate = async (cc, newSociete) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/code_agree/${cc}`, {
+      const response = await apiFetch(`/api/code_agree/${cc}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ societe: newSociete })
       });
-
-      if (!response.ok) throw new Error('Erreur mise à jour');
-      
+      await handleResponse(response);
       setEditingCC(null);
       fetchCompanies();
     } catch (err) {
-      alert('❌ ' + err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        alert('⚠️ Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert('❌ ' + err.message);
+      }
     }
   };
 
   const handleDelete = async (cc) => {
     if (!window.confirm(`Supprimer le code ${cc}?`)) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/code_agree/${cc}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
 
-      if (!response.ok) throw new Error('Erreur suppression');
-      
+    try {
+      const response = await apiFetch(`/api/code_agree/${cc}`, {
+        method: 'DELETE'
+      });
+      await handleResponse(response);
       fetchCompanies();
     } catch (err) {
-      alert('❌ ' + err.message);
+      if (err.message === 'SESSION_EXPIRED') {
+        alert('⚠️ Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert('❌ ' + err.message);
+      }
     }
   };
 

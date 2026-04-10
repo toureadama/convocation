@@ -257,6 +257,18 @@ def verify():
     """Verify JWT token is valid."""
     return jsonify({'ok': True, 'user': get_jwt_identity()})
 
+@app.route('/api/refresh', methods=['POST'])
+@jwt_required()
+def refresh_token():
+    """Refresh JWT token to extend session lifetime.
+    Returns a new token with a fresh 15-minute expiration."""
+    current_user = get_jwt_identity()
+    new_token = create_access_token(identity=current_user)
+    return jsonify({
+        'token': new_token,
+        'message': 'Token refreshed successfully'
+    })
+
 # ============================================================================
 # History Endpoints
 # ============================================================================
@@ -782,14 +794,103 @@ def delete_code_agree(cc):
         with get_db_context() as (conn, cursor):
             cursor.execute('DELETE FROM code_agree WHERE cc = %s', (cc,))
             conn.commit()
-            
+
             if cursor.rowcount == 0:
                 return jsonify({'error': 'Company not found'}), 404
-                
+
             return jsonify({'success': True})
-            
+
     except Exception as e:
         logger.error(f"Delete company error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ============================================================================
+# Code Opérateur Endpoints
+# ============================================================================
+
+@app.route('/api/code_operateur', methods=['GET'])
+@jwt_required()
+def get_code_operateur():
+    """List all operator codes."""
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute('SELECT code_operateur, nom_operateur FROM operateur ORDER BY nom_operateur')
+            return jsonify({'operateurs': [dict(row) for row in cursor.fetchall()]})
+    except Exception as e:
+        logger.error(f"Operator list error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/code_operateur', methods=['POST'])
+@jwt_required()
+@admin_required
+def add_code_operateur():
+    """Add new operator code."""
+    data = request.json
+    code_operateur = data.get('code_operateur', '').strip()
+    nom_operateur = data.get('nom_operateur', '').strip()
+
+    if not code_operateur or not nom_operateur:
+        return jsonify({'error': 'Code and nom are required'}), 400
+
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute(
+                'INSERT INTO operateur (code_operateur, nom_operateur) VALUES (%s, %s)',
+                (code_operateur, nom_operateur)
+            )
+            conn.commit()
+            return jsonify({'success': True}), 201
+    except Exception as e:
+        if 'Duplicate entry' in str(e) or '1062' in str(e):
+            return jsonify({'error': 'Code opérateur already exists'}), 409
+        logger.error(f"Add operator error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/code_operateur/<code>', methods=['PUT'])
+@jwt_required()
+@admin_required
+def update_code_operateur(code):
+    """Update operator name."""
+    data = request.json
+    nom_operateur = data.get('nom_operateur', '').strip()
+
+    if not nom_operateur:
+        return jsonify({'error': 'Nom opérateur is required'}), 400
+
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute(
+                'UPDATE operateur SET nom_operateur = %s WHERE code_operateur = %s',
+                (nom_operateur, code)
+            )
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Operator not found'}), 404
+
+            return jsonify({'success': True})
+
+    except Exception as e:
+        logger.error(f"Update operator error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/code_operateur/<code>', methods=['DELETE'])
+@jwt_required()
+@admin_required
+def delete_code_operateur(code):
+    """Delete operator code."""
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute('DELETE FROM operateur WHERE code_operateur = %s', (code,))
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Operator not found'}), 404
+
+            return jsonify({'success': True})
+
+    except Exception as e:
+        logger.error(f"Delete operator error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 # ============================================================================

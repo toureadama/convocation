@@ -1,6 +1,6 @@
 # ============================================================
 # Dockerfile pour l'application Flask Convocation Douanes CI
-# LibreOffice est requis pour docx2pdf (conversion DOCX → PDF)
+# LibreOffice est requis pour la conversion DOCX → PDF
 # ============================================================
 
 FROM python:3.11-slim

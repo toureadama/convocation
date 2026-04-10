@@ -1,8 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
-
-// API Base URL for production deployment
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { refreshToken, apiFetch, API_BASE_URL } from './api';
 
 // Lazy-loaded components for better initial load performance
 const Form = lazy(() => import('./components/Form'));
@@ -11,12 +9,14 @@ const History = lazy(() => import('./components/History'));
 const Users = lazy(() => import('./components/Users'));
 const Login = lazy(() => import('./components/Login'));
 const CodeAgre = lazy(() => import('./components/CodeAgre'));
+const CodeOperateur = lazy(() => import('./components/CodeOperateur'));
 
 const TABS = {
   GENERATE: 'generate',
   HISTORY: 'history',
   ADMIN: 'admin',
-  CODE_AGRE: 'code_agre'
+  CODE_AGRE: 'code_agre',
+  CODE_OPERATEUR: 'code_operateur'
 };
 
 const ROLES = {
@@ -34,26 +34,51 @@ function App() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(TABS.GENERATE);
 
-  // Verify token validity on mount
+  // Verify token validity on mount and auto-refresh if needed
   useEffect(() => {
     if (!token) return;
 
-    const verifyToken = async () => {
+    const verifyAndRefresh = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/verify`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         if (!response.ok) {
-          handleLogout();
+          // Token expired, try to refresh
+          try {
+            const newToken = await refreshToken();
+            setToken(newToken);
+          } catch {
+            // Refresh failed, force login
+            handleLogout();
+          }
         }
       } catch (error) {
         console.error('Token verification failed:', error);
-        handleLogout();
+        // Try refresh as fallback
+        try {
+          const newToken = await refreshToken();
+          setToken(newToken);
+        } catch {
+          handleLogout();
+        }
       }
     };
 
-    verifyToken();
+    verifyAndRefresh();
+
+    // Auto-refresh token every 10 minutes (before 15-min expiry)
+    const refreshInterval = setInterval(async () => {
+      try {
+        const newToken = await refreshToken();
+        setToken(newToken);
+      } catch {
+        handleLogout();
+      }
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, [token]);
 
   const handleLogin = (newToken, userData) => {
@@ -86,11 +111,10 @@ function App() {
 
     try {
       const params = new URLSearchParams(formData);
-      const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      const response = await apiFetch('/api/generate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: params
       });
@@ -103,6 +127,10 @@ function App() {
       setResults(data.results || []);
       setProgress(100);
     } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
       setError(err.message || 'Erreur lors de la génération');
       setProgress(0);
     } finally {
@@ -168,6 +196,14 @@ function App() {
             Codes Agréés
           </button>
         )}
+        {canManageUsers && (
+          <button
+            className={activeTab === TABS.CODE_OPERATEUR ? 'tab-active' : 'tab'}
+            onClick={() => setActiveTab(TABS.CODE_OPERATEUR)}
+          >
+            Codes Opérateurs
+          </button>
+        )}
       </nav>
 
       <main>
@@ -189,6 +225,7 @@ function App() {
           
           {canManageUsers && activeTab === TABS.ADMIN && <Users currentUserRole={userRole} />}
           {canManageUsers && activeTab === TABS.CODE_AGRE && <CodeAgre />}
+          {canManageUsers && activeTab === TABS.CODE_OPERATEUR && <CodeOperateur />}
         </Suspense>
       </main>
     </div>
