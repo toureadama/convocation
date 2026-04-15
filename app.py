@@ -29,9 +29,16 @@ from db_config import get_db_connection, close_connection
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'douanes-local-jwt-super-secure-2024')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 900  # 15 minutes
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours (in production, tokens refresh every 10 min anyway)
 jwt = JWTManager(app)
-CORS(app)
+
+# Configure CORS for Render deployment (allow multiple domains)
+CORS_ORIGINS = [
+    'http://localhost:3000',  # Local development
+    'http://localhost:5000',  # Local development
+    'https://*.onrender.com'  # All Render domains
+]
+CORS(app, origins=CORS_ORIGINS, supports_credentials=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -803,9 +810,8 @@ def update_user_credentials(user_id):
 
 @app.route('/api/companies', methods=['GET'])
 @jwt_required()
-@admin_required
 def get_companies():
-    """List all approved companies."""
+    """List all approved companies. Used by Vérificateur form for dropdown. Accessible to authenticated users."""
     try:
         with get_db_context() as (conn, cursor):
             cursor.execute('SELECT cc, societe FROM code_agree ORDER BY societe')
@@ -816,9 +822,8 @@ def get_companies():
 
 @app.route('/api/operateurs', methods=['GET'])
 @jwt_required()
-@admin_required
 def get_operateurs():
-    """List all operateurs."""
+    """List all operateurs. Used by Vérificateur form for dropdown. Accessible to authenticated users."""
     try:
         with get_db_context() as (conn, cursor):
             cursor.execute('SELECT code_operateur, nom_operateur FROM operateur ORDER BY nom_operateur')
@@ -831,7 +836,7 @@ def get_operateurs():
 @jwt_required()
 @admin_required
 def get_code_agree():
-    """List all approved company codes (alias for /companies)."""
+    """List all approved company codes (Admin Technique only for management). Used by CodeAgre component."""
     return get_companies()
 
 @app.route('/api/code_agree', methods=['POST'])
@@ -909,7 +914,7 @@ def delete_code_agree(cc):
 @jwt_required()
 @admin_required
 def get_code_operateur():
-    """List all operator codes."""
+    """List all operator codes (Admin Technique only for management). Used by CodeOperateur component."""
     try:
         with get_db_context() as (conn, cursor):
             cursor.execute('SELECT code_operateur, nom_operateur FROM operateur ORDER BY nom_operateur')

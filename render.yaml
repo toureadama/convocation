@@ -34,5 +34,3 @@ services:
         value: "0"
       - key: PORT
         value: "5000"
-      - key: REACT_APP_API_URL
-        value: ""  # Will be set by Render after deployment

@@ -31,9 +31,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py db_config.py convocation_mysql.py ./
 COPY Convocation_modele.docx .
 
-# Build frontend
+# Build frontend (pass API URL as build arg)
 COPY frontend ./frontend
-RUN cd frontend && npm install && npm run build
+ARG REACT_APP_API_URL=https://convocation-douanesci.onrender.com
+RUN cd frontend && npm install && REACT_APP_API_URL=${REACT_APP_API_URL} npm run build
 
 # Créer le dossier output (persistance limitée sur Render Free)
 RUN mkdir -p output
