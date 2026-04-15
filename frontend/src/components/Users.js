@@ -125,18 +125,20 @@ const Users = ({ currentUserRole }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Désactiver cet utilisateur?')) return;
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?\nCette action est irréversible.')) return;
 
     try {
       const response = await apiFetch(`/api/users/${id}`, {
         method: 'DELETE'
       });
       await handleResponse(response);
+      alert('✅ Utilisateur supprimé avec succès');
       fetchUsers();
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         setError('Session expirée. Veuillez vous reconnecter.');
       } else {
+        alert('❌ ' + err.message);
         setError(err.message);
       }
     }
@@ -318,7 +320,7 @@ const Users = ({ currentUserRole }) => {
                     <button onClick={() => handleEditCredentials(user)} className="key-btn" title="Modifier identifiants">
                       🔑
                     </button>
-                    <button onClick={() => handleDelete(user.id)} className="delete-btn" title="Désactiver">
+                    <button onClick={() => handleDelete(user.id)} className="delete-btn" title="Supprimer l'utilisateur">
                       🗑️
                     </button>
                   </td>

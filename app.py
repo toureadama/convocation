@@ -752,21 +752,65 @@ def update_user(user_id):
 @jwt_required()
 @admin_required
 def delete_user(user_id):
-    """Soft delete user (deactivate)."""
+    """Delete user permanently from database."""
     try:
         with get_db_context() as (conn, cursor):
-            cursor.execute('UPDATE users SET is_active = 0 WHERE id = %s', (user_id,))
+            cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
             conn.commit()
             
             if cursor.rowcount == 0:
                 return jsonify({'error': 'User not found'}), 404
                 
-            logger.info(f"User deactivated: {user_id}")
+            logger.info(f"User deleted: {user_id}")
             return jsonify({'success': True})
-            
     except Exception as e:
-        logger.error(f"User deletion error: {e}")
+        logger.error(f"Error deleting user {user_id}: {e}")
+        return jsonify({'error': 'Erreur lors de la suppression'}), 500
+    
+@app.route('/api/users/inactive', methods=['GET'])
+@jwt_required()
+@admin_required
+def list_inactive_users():
+    """List all inactive users (is_active = 0)."""
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute("""
+                SELECT id, login, nom, prenom, grade, role, created_at 
+                FROM users 
+                WHERE is_active = 0 
+                ORDER BY created_at ASC
+            """)
+            inactive_users = [dict(row) for row in cursor.fetchall()]
+            return jsonify({
+                'inactive_users': inactive_users, 
+                'count': len(inactive_users)
+            })
+    except Exception as e:
+        logger.error(f"List inactive users error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/api/users/inactive', methods=['DELETE'])
+@jwt_required()
+@admin_required
+def delete_inactive_users():
+    """Permanently delete all inactive users (is_active = 0)."""
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute('DELETE FROM users WHERE is_active = 0')
+            deleted_count = cursor.rowcount
+            conn.commit()
+            
+            logger.info(f"Bulk deleted {deleted_count} inactive users")
+            return jsonify({
+                'success': True,
+                'deleted_count': deleted_count,
+                'message': f'{deleted_count} inactive users permanently deleted.'
+            })
+    except Exception as e:
+        logger.error(f"Bulk delete inactive users error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 
 @app.route('/api/users/<int:user_id>/credentials', methods=['PUT'])
 @jwt_required()
