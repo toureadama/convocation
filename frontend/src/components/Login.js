@@ -88,10 +88,6 @@ const Login = ({ onLogin }) => {
         >
           {loading ? 'Connexion...' : 'Se connecter'}
         </button>
-
-        <div className="login-hint">
-          Admin: <strong>admin</strong> / <strong>admin123</strong>
-        </div>
       </form>
     </div>
   );

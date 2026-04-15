@@ -12,6 +12,11 @@ const DEFAULT_FILTERS = {
   statut: ''
 };
 
+const PENDING_FILTERS = {
+  admin: '',
+  statut: 'EN_COURS'
+};
+
 const PAGINATION = {
   limit: 10
 };
@@ -23,8 +28,9 @@ const History = ({ user, canViewAll }) => {
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  const isAdmin = user?.grade === 'Administrateur' || user?.role === 'Administrateur' ||
-                  user?.grade === 'Super Administrateur' || user?.role === 'Super Administrateur';
+  const isAdmin = user?.role === 'Administrateur Technique' || user?.role === 'Super Administrateur' || user?.role === 'Chrono';
+
+  const isTechniqueAdmin = user?.grade === 'Administrateur Technique' || user?.role === 'Administrateur Technique';
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -67,6 +73,17 @@ const History = ({ user, canViewAll }) => {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  // Auto-filter for admin: show pending convocations addressed to me
+  useEffect(() => {
+    if (isTechniqueAdmin && user?.signature_name && filters.admin !== user.signature_name) {
+      setFilters({
+        ...DEFAULT_FILTERS,
+        admin: user.signature_name,
+        statut: 'EN_COURS'
+      });
+    }
+  }, [user, isTechniqueAdmin]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -121,6 +138,29 @@ const updateStatus = async (entryId, newStatus) => {
       setHistory(prev => prev.map(entry =>
         entry.id === entryId ? { ...entry, [field]: value } : entry
       ));
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
+      alert(err.message);
+    }
+  };
+
+  const handleDelete = async (entryId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) return;
+
+    try {
+      const response = await apiFetch(`/api/history/${entryId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Erreur lors de la suppression');
+      }
+
+      setHistory(prev => prev.filter(entry => entry.id !== entryId));
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         window.location.reload();
@@ -227,8 +267,14 @@ const updateStatus = async (entryId, newStatus) => {
             <button onClick={fetchHistory} className="filter-btn">
               Appliquer
             </button>
+            <button onClick={() => {
+              setFilters({ ...DEFAULT_FILTERS, ...PENDING_FILTERS, admin: user?.signature_name || '' });
+              setPage(0);
+            }} className="pending-btn">
+              Mes En Attente
+            </button>
             <button onClick={clearFilters} className="clear-btn">
-              Effacer
+              Tout Afficher
             </button>
           </div>
         </div>
@@ -253,6 +299,8 @@ const updateStatus = async (entryId, newStatus) => {
                 <th>Retour CDA</th>
                 <th>Fichiers</th>
                 <th>Statut</th>
+                <th>Numéro Chrono</th>
+                {isTechniqueAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -324,6 +372,30 @@ const updateStatus = async (entryId, newStatus) => {
                       <span className="statut-readonly">{entry.statut || 'En cours'}</span>
                     )}
                   </td>
+                  <td>
+                    {user?.role === 'Chrono' ? (
+                      <input
+                        type="text"
+                        value={entry.numero_chrono || ''}
+                        onChange={(e) => updateField(entry.id, 'numero_chrono', e.target.value)}
+                        className="chrono-input"
+                        placeholder="N° Chrono"
+                      />
+                    ) : (
+                      <span className="readonly-field">{entry.numero_chrono || '-'}</span>
+                    )}
+                  </td>
+                  {isTechniqueAdmin && (
+                    <td>
+                      <button
+                        onClick={() => handleDelete(entry.id)}
+                        className="delete-entry-btn"
+                        title="Supprimer cette entrée"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

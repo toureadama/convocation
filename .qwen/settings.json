@@ -13,7 +13,16 @@
       "Bash(findstr *)",
       "Bash(del *)",
       "Bash(netstat *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(.venv\\scripts\\activate)",
+      "Bash(.venv\\scripts\\pip.exe *)",
+      "Bash(pip install *)",
+      "Bash(mysql *)",
+      "Bash(type *)",
+      "Bash(c:\\users\\hp *)",
+      "Bash(where *)",
+      "Bash(@echo.)",
+      "Bash(start *)"
     ]
   },
   "$version": 3

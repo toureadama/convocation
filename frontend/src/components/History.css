@@ -170,7 +170,7 @@
 .export-btn {
   position: relative;
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-  color: white;
+  color: black;
   border: none;
   padding: 14px 28px;
   font-weight: 700;
@@ -204,13 +204,47 @@
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  
+
   .filters-section {
     padding: 15px;
   }
-  
+
   .pagination {
     flex-direction: column;
     gap: 8px;
   }
+}
+
+.delete-entry-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 1.1em;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-entry-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(220,53,69,0.4);
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+}
+
+.chrono-input {
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85em;
+  width: 100px;
+}
+
+.delete-entry-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220,53,69,0.3);
 }

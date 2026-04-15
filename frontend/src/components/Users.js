@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch, handleResponse } from '../api';
 import './Users.css';
 
-const GRADE_OPTIONS = ['Vérificateur', 'Administrateur', 'Super Administrateur'];
+const GRADE_OPTIONS = ['Vérificateur', 'Administrateur', 'Chrono', 'Super Administrateur', 'Administrateur Technique'];
 
 const Users = ({ currentUserRole }) => {
-  const isSuperAdmin = currentUserRole === 'Super Administrateur';
+  const isAdminTechnique = currentUserRole === 'Administrateur Technique';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -257,7 +257,11 @@ const Users = ({ currentUserRole }) => {
               >
                 <option value="">Sélectionner un niveau</option>
                 {GRADE_OPTIONS
-                  .filter(grade => isSuperAdmin || grade === 'Vérificateur')
+                  .filter(grade => {
+                    // Only Admin Technique can create users
+                    if (isAdminTechnique) return true;
+                    return false;
+                  })
                   .map(grade => (
                     <option key={grade} value={grade}>{grade}</option>
                   ))}

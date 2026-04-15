@@ -10,9 +10,8 @@ __pycache__/
 .venv/
 venv/
 
-# Fichiers générés
-output/
-*.pdf
+db_config.py
+.qwen/
 
 # Templates (NE PAS exclure - fichiers sources)
 # Convocation_modele.docx <- DOIT être commité

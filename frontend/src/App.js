@@ -22,7 +22,8 @@ const TABS = {
 const ROLES = {
   VERIFICATEUR: 'Vérificateur',
   ADMINISTRATEUR: 'Administrateur',
-  SUPER_ADMIN: 'Super Administrateur'
+  SUPER_ADMIN: 'Super Administrateur',
+  ADMIN_TECHNIQUE: 'Administrateur Technique'
 };
 
 function App() {
@@ -139,10 +140,13 @@ function App() {
   };
 
   const userRole = user?.role || user?.grade;
-  const isAdmin = userRole === ROLES.ADMINISTRATEUR;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
-  const canManageUsers = isAdmin || isSuperAdmin;
-  const canViewAllHistory = isSuperAdmin;
+  const isAdminTechnique = userRole === ROLES.ADMIN_TECHNIQUE;
+  const isVerificateur = userRole === ROLES.VERIFICATEUR;
+  const canManageUsers = isAdminTechnique;
+  const canManageCodes = isAdminTechnique;
+  const canGenerate = isVerificateur;
+  const canViewAllHistory = isSuperAdmin || isAdminTechnique;
 
   // Login screen
   if (!token) {
@@ -168,12 +172,14 @@ function App() {
       </header>
 
       <nav className="tabs">
-        <button
-          className={activeTab === TABS.GENERATE ? 'tab-active' : 'tab'}
-          onClick={() => setActiveTab(TABS.GENERATE)}
-        >
-          Générer
-        </button>
+        {canGenerate && (
+          <button
+            className={activeTab === TABS.GENERATE ? 'tab-active' : 'tab'}
+            onClick={() => setActiveTab(TABS.GENERATE)}
+          >
+            Générer
+          </button>
+        )}
         <button
           className={activeTab === TABS.HISTORY ? 'tab-active' : 'tab'}
           onClick={() => setActiveTab(TABS.HISTORY)}
@@ -188,7 +194,7 @@ function App() {
             Admin Utilisateurs
           </button>
         )}
-        {canManageUsers && (
+        {canManageCodes && (
           <button
             className={activeTab === TABS.CODE_AGRE ? 'tab-active' : 'tab'}
             onClick={() => setActiveTab(TABS.CODE_AGRE)}
@@ -196,7 +202,7 @@ function App() {
             Codes Agréés
           </button>
         )}
-        {canManageUsers && (
+        {canManageCodes && (
           <button
             className={activeTab === TABS.CODE_OPERATEUR ? 'tab-active' : 'tab'}
             onClick={() => setActiveTab(TABS.CODE_OPERATEUR)}
@@ -208,7 +214,7 @@ function App() {
 
       <main>
         <Suspense fallback={<div className="loading">Chargement...</div>}>
-          {activeTab === TABS.GENERATE && (
+          {canGenerate && activeTab === TABS.GENERATE && (
             <>
               <Form
                 onGenerate={handleGenerate}
@@ -222,10 +228,10 @@ function App() {
           )}
 
           {activeTab === TABS.HISTORY && <History user={user} canViewAll={canViewAllHistory} />}
-          
+
           {canManageUsers && activeTab === TABS.ADMIN && <Users currentUserRole={userRole} />}
-          {canManageUsers && activeTab === TABS.CODE_AGRE && <CodeAgre />}
-          {canManageUsers && activeTab === TABS.CODE_OPERATEUR && <CodeOperateur />}
+          {canManageCodes && activeTab === TABS.CODE_AGRE && <CodeAgre />}
+          {canManageCodes && activeTab === TABS.CODE_OPERATEUR && <CodeOperateur />}
         </Suspense>
       </main>
     </div>

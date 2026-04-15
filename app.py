@@ -95,7 +95,7 @@ def validate_date(date_str):
 
 
 def admin_required(f):
-    """Decorator to require admin or super admin role."""
+    """Decorator to require admin technique role for user/code management."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         current_user = get_jwt_identity()
@@ -104,13 +104,53 @@ def admin_required(f):
                 cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
                 user_row = cursor.fetchone()
                 user_role = user_row['role'] if user_row else 'Vérificateur'
-                
-                if user_role not in ('Administrateur', 'Super Administrateur'):
+
+                if user_role != 'Administrateur Technique':
                     return jsonify({'error': 'Admin access required'}), 403
         except Exception as e:
             logger.error(f"Admin check failed: {e}")
             return jsonify({'error': 'Access denied'}), 403
-        
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def technical_admin_required(f):
+    """Decorator to require admin technique role (for user/code management)."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        current_user = get_jwt_identity()
+        try:
+            with get_db_context() as (conn, cursor):
+                cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+                user_row = cursor.fetchone()
+                user_role = user_row['role'] if user_row else 'Vérificateur'
+
+                if user_role != 'Administrateur Technique':
+                    return jsonify({'error': 'Admin access required'}), 403
+        except Exception as e:
+            logger.error(f"Admin check failed: {e}")
+            return jsonify({'error': 'Access denied'}), 403
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def generate_access_required(f):
+    """Decorator to require access to PDF generation (only Vérificateur)."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        current_user = get_jwt_identity()
+        try:
+            with get_db_context() as (conn, cursor):
+                cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+                user_row = cursor.fetchone()
+                user_role = user_row['role'] if user_row else 'Vérificateur'
+
+                if user_role != 'Vérificateur':
+                    return jsonify({'error': 'Access denied. Only Vérificateur can generate convocations.'}), 403
+        except Exception as e:
+            logger.error(f"Generate access check failed: {e}")
+            return jsonify({'error': 'Access denied'}), 403
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -187,6 +227,28 @@ def init_db():
                 ('Admin', 'Super', 'Administrateur', 'admin', password_hash, '***', 'Super Administrateur')
             )
             logger.info("✅ Admin created: admin/admin123 (Super Administrateur)")
+
+        # Create default Admin Technique if not exists
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='info'")
+        if cursor.fetchone()['cnt'] == 0:
+            password = 'info123'
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute(
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                ('Info', 'Technique', 'Administrateur Technique', 'info', password_hash, '***', 'Administrateur Technique')
+            )
+            logger.info("✅ Admin Technique created: info/info123 (Administrateur Technique)")
+
+        # Create default Chrono user
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='chrono'")
+        if cursor.fetchone()['cnt'] == 0:
+            password = 'chrono123'
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute(
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                ('Chrono', 'Service', 'Chrono', 'chrono', password_hash, '***', 'Chrono', 'CHRONO SERVICE')
+            )
+            logger.info("✅ Chrono user created: chrono/chrono123")
 
         conn.commit()
         logger.info("✅ MySQL database initialized successfully")
@@ -293,25 +355,20 @@ def build_history_query(current_user, filters, include_pagination=True):
         user_signature = None
 
     # Role-based filtering
-    if user_role == 'Super Administrateur':
-        # Super Admin sees ALL entries
+    if user_role in ('Super Administrateur', 'Administrateur Technique', 'Chrono'):
+        # Full access roles see ALL entries
         pass
     elif user_role == 'Administrateur':
-        # Admin sees: own entries + entries where signature_admin matches
-        if user_signature:
-            where_conditions.append("(h.user_login = %s OR h.signature_admin = %s)")
-            params.extend([current_user, user_signature])
-        else:
-            # If no signature_name, only show own entries
-            where_conditions.append("h.user_login = %s")
-            params.append(current_user)
+        # Admin sees only own entries OR entries addressed to them for signature
+        where_conditions.append("(h.user_login = %s OR h.signature_admin LIKE %s)")
+        params.extend([current_user, f"%{user_signature or current_user}%"])
     else:
         # Vérificateur sees only own entries
         where_conditions.append("h.user_login = %s")
         params.append(current_user)
 
-    # Admin filters (for Admin and Super Admin only)
-    if user_role in ('Administrateur', 'Super Administrateur') and filters:
+    # Admin filters (for Super Admin and Admin Technique only)
+    if user_role in ('Super Administrateur', 'Administrateur Technique') and filters:
         filter_map = [
             ('date_from', 'h.timestamp', '>='),
             ('date_to', 'h.timestamp', '<='),
@@ -507,8 +564,8 @@ def update_history_status(entry_id):
             user_row = cursor.fetchone()
             user_role = user_row['role'] if user_row else 'Vérificateur'
             
-            # Only owner or admin can update status
-            if user_role not in ('Administrateur', 'Super Administrateur') and entry['user_login'] != current_user:
+            # Only owner or admin (Super Admin, Admin Technique) can update status
+            if user_role not in ('Super Administrateur', 'Administrateur Technique') and entry['user_login'] != current_user:
                 return jsonify({'error': 'Access denied. You can only modify your own entries.'}), 403
 
             cursor.execute('UPDATE history SET statut = %s WHERE id = %s', (statut, entry_id))
@@ -521,12 +578,49 @@ def update_history_status(entry_id):
         logger.error(f"Status update error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/history/<int:entry_id>', methods=['DELETE'])
+@jwt_required()
+def delete_history_entry(entry_id):
+    """Delete a history entry - only Admin Technique can delete."""
+    current_user = get_jwt_identity()
+
+    try:
+        with get_db_context() as (conn, cursor):
+            # Check if entry exists
+            cursor.execute(
+                'SELECT id FROM history WHERE id = %s',
+                (entry_id,)
+            )
+            entry = cursor.fetchone()
+
+            if not entry:
+                return jsonify({'error': 'Entry not found'}), 404
+
+            # Check user role - only Admin Technique can delete
+            cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            user_role = user_row['role'] if user_row else 'Vérificateur'
+
+            if user_role != 'Administrateur Technique':
+                return jsonify({'error': 'Access denied. Only Admin Technique can delete entries.'}), 403
+
+            cursor.execute('DELETE FROM history WHERE id = %s', (entry_id,))
+            conn.commit()
+
+            logger.info(f"History entry {entry_id} deleted by {current_user} (Admin Technique)")
+            return jsonify({'success': True})
+
+    except Exception as e:
+        logger.error(f"History deletion error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 # ============================================================================
 # User Management Endpoints
 # ============================================================================
 
 @app.route('/api/users', methods=['GET'])
 @jwt_required()
+@admin_required
 def get_users():
     """List all active users."""
     try:
@@ -561,10 +655,10 @@ def create_user():
         creator_role = 'Vérificateur'
     
     requested_role = data.get('role') or data.get('grade', 'Vérificateur')
-    
-    # Administrateur can only create Vérificateur
-    if creator_role == 'Administrateur' and requested_role != 'Vérificateur':
-        return jsonify({'error': 'Administrateur ne peut créer que des Vérificateurs'}), 403
+
+    # Only Admin Technique can create users
+    if creator_role != 'Administrateur Technique':
+        return jsonify({'error': 'Seul l\'Administrateur Technique peut créer des utilisateurs'}), 403
     
     # Validate login if provided
     login = data.get('login', '').strip()
@@ -709,6 +803,7 @@ def update_user_credentials(user_id):
 
 @app.route('/api/companies', methods=['GET'])
 @jwt_required()
+@admin_required
 def get_companies():
     """List all approved companies."""
     try:
@@ -721,6 +816,7 @@ def get_companies():
 
 @app.route('/api/operateurs', methods=['GET'])
 @jwt_required()
+@admin_required
 def get_operateurs():
     """List all operateurs."""
     try:
@@ -733,6 +829,7 @@ def get_operateurs():
 
 @app.route('/api/code_agree', methods=['GET'])
 @jwt_required()
+@admin_required
 def get_code_agree():
     """List all approved company codes (alias for /companies)."""
     return get_companies()
@@ -810,6 +907,7 @@ def delete_code_agree(cc):
 
 @app.route('/api/code_operateur', methods=['GET'])
 @jwt_required()
+@admin_required
 def get_code_operateur():
     """List all operator codes."""
     try:
@@ -899,6 +997,7 @@ def delete_code_operateur(code):
 
 @app.route('/api/generate', methods=['POST'])
 @jwt_required()
+@generate_access_required
 def generate_convocation():
     """Generate convocation PDF."""
     required_fields = ['cc', 'code_imp', 'verificateur', 'num_declaration', 'date_declaration', 'type_dossier', 'fraude', 'signature_admin']
