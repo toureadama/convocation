@@ -134,6 +134,22 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
     onGenerate(formData);
   }, [formData, onGenerate]);
 
+  // Reset form après génération réussie (champs vides)
+  const resetForm = useCallback(() => {
+    setFormData({
+      cc: '',
+      code_imp: '',
+      verificateur: currentUser ? `${currentUser.nom} ${currentUser.prenom}`.trim() : '',
+      num_declaration: '',
+      date_declaration: '',
+      type_dossier: '',
+      objet: '',
+      signature_admin: ''
+    });
+    setSelectedCompany('');
+    setSelectedOperateur('');
+  }, [currentUser]);
+
   const isFormValid = formData.cc && formData.code_imp && formData.verificateur &&
                       formData.num_declaration && formData.date_declaration &&
                       formData.type_dossier && formData.fraude && formData.signature_admin;
@@ -283,6 +299,18 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
       >
         {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
       </button>
+      
+      {/* Reset button après génération */}
+      {!loading && isFormValid && (
+        <button
+          type="button"
+          onClick={resetForm}
+          className="reset-btn"
+          title="Vider formulaire pour nouvelle convocation"
+        >
+          🗑️ Nouvelle Convocation
+        </button>
+      )}
     </form>
   );
 };

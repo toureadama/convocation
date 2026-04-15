@@ -71,6 +71,25 @@
   cursor: not-allowed;
 }
 
+.reset-btn {
+  margin-left: 10px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: auto;
+  display: inline-block;
+}
+
+.reset-btn:hover {
+  background: #ff5252;
+}
+
 /* New Progress Bar Styles */
 .progress-section {
   margin: 20px 0;
