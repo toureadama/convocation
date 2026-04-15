@@ -32,13 +32,10 @@ app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'douanes-local-jwt-su
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours (in production, tokens refresh every 10 min anyway)
 jwt = JWTManager(app)
 
-# Configure CORS for Render deployment (allow multiple domains)
-CORS_ORIGINS = [
-    'http://localhost:3000',  # Local development
-    'http://localhost:5000',  # Local development
-    'https://*.onrender.com'  # All Render domains
-]
-CORS(app, origins=CORS_ORIGINS, supports_credentials=True)
+CORS(app, origins=[
+  "https://convocation-a762.onrender.com",
+  "http://localhost:3000"
+], supports_credentials=True)
 
 logging.basicConfig(
     level=logging.INFO,
