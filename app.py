@@ -13,6 +13,7 @@ from datetime import datetime
 from functools import wraps
 from contextlib import contextmanager
 import logging
+from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -23,6 +24,9 @@ import mysql.connector
 
 from db_config import get_db_connection, close_connection
 
+# Load environment variables
+load_dotenv()
+
 # ============================================================================
 # Application Configuration
 # ============================================================================
@@ -32,10 +36,24 @@ app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'douanes-local-jwt-su
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours (in production, tokens refresh every 10 min anyway)
 jwt = JWTManager(app)
 
-CORS(app, origins=[
-  "https://convocation-a762.onrender.com",
-  "http://localhost:3000"
-], supports_credentials=True)
+# ============================================================================
+# CORS Configuration (environment-based)
+# ============================================================================
+
+ENVIRONMENT = os.getenv('FLASK_ENV', 'development')
+
+CORS_CONFIG = {
+    'development': [
+        'http://localhost:3000',
+        'http://localhost:5000'
+    ],
+    'production': [
+        'https://convocation-a762.onrender.com',
+        'https://convocation-douanesci.onrender.com'
+    ]
+}
+
+CORS(app, origins=CORS_CONFIG.get(ENVIRONMENT, CORS_CONFIG['development']), supports_credentials=True)
 
 logging.basicConfig(
     level=logging.INFO,
