@@ -139,7 +139,7 @@ def technical_admin_required(f):
     return decorated_function
 
 def generate_access_required(f):
-    """Decorator to require access to PDF generation (only Vérificateur)."""
+    """Decorator pour génération PDF: Vérificateur + Chrono."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         current_user = get_jwt_identity()
@@ -149,11 +149,11 @@ def generate_access_required(f):
                 user_row = cursor.fetchone()
                 user_role = user_row['role'] if user_row else 'Vérificateur'
 
-                if user_role != 'Vérificateur':
-                    return jsonify({'error': 'Access denied. Only Vérificateur can generate convocations.'}), 403
+                if user_role not in ['Vérificateur', 'Chrono']:
+                    return jsonify({'error': 'Accès refusé. Seuls Vérificateur et Chrono peuvent générer.'}), 403
         except Exception as e:
             logger.error(f"Generate access check failed: {e}")
-            return jsonify({'error': 'Access denied'}), 403
+            return jsonify({'error': 'Accès refusé'}), 403
 
         return f(*args, **kwargs)
     return decorated_function
@@ -543,7 +543,7 @@ def history_export():
 @app.route('/api/history/<int:entry_id>/status', methods=['PUT'])
 @jwt_required()
 def update_history_status(entry_id):
-    """Update convocation status - any user can update their own entries, admin can update all."""
+    """Update convocation status - signature_admin only."""
     current_user = get_jwt_identity()
     data = request.json
     statut = data.get('statut')
@@ -553,31 +553,32 @@ def update_history_status(entry_id):
 
     try:
         with get_db_context() as (conn, cursor):
-            # Check if entry exists
-            cursor.execute(
-                'SELECT id, user_login FROM history WHERE id = %s',
-                (entry_id,)
-            )
+            # 1. Check entry exists + get signature_admin
+            cursor.execute('SELECT id, signature_admin FROM history WHERE id = %s', (entry_id,))
             entry = cursor.fetchone()
-
+            
             if not entry:
                 return jsonify({'error': 'Entry not found'}), 404
-
-            # Check if user is admin
-            cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
-            user_row = cursor.fetchone()
-            user_role = user_row['role'] if user_row else 'Vérificateur'
             
-            # Only owner or admin (Super Admin, Admin Technique) can update status
-            if user_role not in ('Super Administrateur', 'Administrateur Technique') and entry['user_login'] != current_user:
-                return jsonify({'error': 'Access denied. You can only modify your own entries.'}), 403
-
+            # 2. Get current user full name (nom + prenom)
+            cursor.execute('SELECT nom, prenom FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            if not user_row:
+                return jsonify({'error': 'User not found'}), 403
+            
+            user_fullname = f"{user_row['nom']} {user_row['prenom']}".strip()
+            
+            # 3. Check if user is the signature_admin
+            if user_fullname not in entry['signature_admin']:
+                return jsonify({'error': f'Accès refusé. Seul {entry["signature_admin"]} peut modifier ce statut.'}), 403
+            
+            # 4. Update status
             cursor.execute('UPDATE history SET statut = %s WHERE id = %s', (statut, entry_id))
             conn.commit()
-
-            logger.info(f"Status updated for entry {entry_id} by {current_user}: {statut}")
-            return jsonify({'success': True})
-
+            
+            logger.info(f"Status {entry_id} → {statut} by {user_fullname}")
+            return jsonify({'success': True, 'message': f'Statut changé en {statut} par {user_fullname}'})
+            
     except Exception as e:
         logger.error(f"Status update error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
