@@ -27,12 +27,13 @@ const History = ({ user, canViewAll }) => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-
-  const isAdmin = user?.role === 'Administrateur Technique' || user?.role === 'Super Administrateur' || user?.role === 'Chrono';
+  const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
 
   const isTechniqueAdmin = user?.grade === 'Administrateur Technique' || user?.role === 'Administrateur Technique';
 
-  const fetchHistory = useCallback(async () => {
+  const isAdmin = !!user?.role; // TOUS ont export/filtres
+
+  const fetchHistory = useCallback(async (pageNum, filterData) => {
     setLoading(true);
     setError('');
 
@@ -43,9 +44,9 @@ const History = ({ user, canViewAll }) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          page,
+          page: pageNum,
           limit: PAGINATION.limit,
-          filters: isAdmin ? filters : {}
+          filters: filterData
         })
       });
 
@@ -68,29 +69,41 @@ const History = ({ user, canViewAll }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, filters, isAdmin]);
+  }, []);
 
+  // Trigger fetch when page or APPLIED filters change
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    fetchHistory(page, appliedFilters);
+  }, [fetchHistory, page, appliedFilters]);
 
   // Auto-filter for admin: show pending convocations addressed to me
   useEffect(() => {
-    if (isTechniqueAdmin && user?.signature_name && filters.admin !== user.signature_name) {
-      setFilters({
+    if (isTechniqueAdmin && user?.signature_name) {
+      const newFilters = {
         ...DEFAULT_FILTERS,
         admin: user.signature_name,
         statut: 'EN_COURS'
-      });
+      };
+      // Only apply if not already applied to avoid loops
+      if (JSON.stringify(appliedFilters) !== JSON.stringify(newFilters)) {
+        setAppliedFilters(newFilters);
+        setFilters(newFilters);
+      }
     }
-  }, [user, isTechniqueAdmin]);
+  }, [user, isTechniqueAdmin, appliedFilters]);
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleApplyFilters = () => {
+    setAppliedFilters(filters);
+    setPage(0);
   };
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS);
+    setAppliedFilters(DEFAULT_FILTERS);
     setPage(0);
   };
 
@@ -177,7 +190,7 @@ const updateStatus = async (entryId, newStatus) => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ filters })
+        body: JSON.stringify({ filters: appliedFilters })
       });
 
       if (!response.ok) {
@@ -221,7 +234,7 @@ const updateStatus = async (entryId, newStatus) => {
       {isAdmin && (
         <div className="filters-section">
           <h3>Filtres</h3>
-          <div className="filters-grid">
+          <div className="filters-grid"> 
             <input
               type="date"
               placeholder="Date début"
@@ -264,11 +277,12 @@ const updateStatus = async (entryId, newStatus) => {
               <option value="Confirmé">Confirmé</option>
               <option value="Refusé">Refusé</option>
             </select>
-            <button onClick={fetchHistory} className="filter-btn">
-              Appliquer
+            <button onClick={handleApplyFilters} className="filter-btn">
+              Appliquer les filtres
             </button>
             <button onClick={() => {
               setFilters({ ...DEFAULT_FILTERS, ...PENDING_FILTERS, admin: user?.signature_name || '' });
+              setAppliedFilters({ ...DEFAULT_FILTERS, ...PENDING_FILTERS, admin: user?.signature_name || '' });
               setPage(0);
             }} className="pending-btn">
               Mes En Attente
