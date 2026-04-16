@@ -201,6 +201,7 @@ def init_db():
             code_imp VARCHAR(100),
             date_accuse VARCHAR(50),
             retour_cda VARCHAR(10) DEFAULT 'NON',
+            numero_chrono VARCHAR(100),
             num_generated INT DEFAULT 0,
             filenames TEXT,
             user_login VARCHAR(255) NOT NULL,
@@ -220,6 +221,14 @@ def init_db():
             code_operateur VARCHAR(100) UNIQUE NOT NULL,
             nom_operateur VARCHAR(255) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
+
+        # Migration: Add numero_chrono column if it doesn't exist
+        try:
+            cursor.execute('''ALTER TABLE history ADD COLUMN numero_chrono VARCHAR(100)''')
+            logger.info("✅ Added numero_chrono column to history table")
+        except Exception:
+            # Column already exists, ignore error
+            pass
 
         # Create default admin if not exists
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='admin'")
@@ -371,8 +380,8 @@ def build_history_query(current_user, filters, include_pagination=True):
         where_conditions.append("h.user_login = %s")
         params.append(current_user)
 
-    # Admin filters (for Super Admin and Admin Technique only)
-    if user_role in ('Super Administrateur', 'Administrateur Technique') and filters:
+    # Filters available to ALL roles
+    if filters:
         filter_map = [
             ('date_from', 'h.timestamp', '>='),
             ('date_to', 'h.timestamp', '<='),
@@ -471,11 +480,11 @@ def get_history():
 @app.route('/api/history/<int:entry_id>/fields', methods=['PUT'])
 @jwt_required()
 def update_history_fields(entry_id):
-    """Update date_accuse and/or retour_cda - only the owner can update."""
+    """Update date_accuse, retour_cda, and/or numero_chrono - owners or Administrateur/Chrono can update."""
     current_user = get_jwt_identity()
     data = request.json
     
-    allowed_fields = {'date_accuse', 'retour_cda'}
+    allowed_fields = {'date_accuse', 'retour_cda', 'numero_chrono'}
     updates = {k: v for k, v in data.items() if k in allowed_fields}
     
     if not updates:
@@ -493,8 +502,16 @@ def update_history_fields(entry_id):
             if not entry:
                 return jsonify({'error': 'Entry not found'}), 404
             
-            # Only owner can update
-            if entry['user_login'] != current_user:
+            # Get current user's role
+            cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            user_role = user_row['role'] if user_row else 'Vérificateur'
+            
+            # Only owner can update, or Administrateur/Administrateur Technique/Chrono for specific fields
+            is_owner = entry['user_login'] == current_user
+            can_update_all = user_role in ['Administrateur', 'Administrateur Technique', 'Chrono']
+            
+            if not (is_owner or can_update_all):
                 return jsonify({'error': 'Access denied. You can only modify your own entries.'}), 403
             
             fields = ', '.join(f'{k} = %s' for k in updates.keys())
@@ -512,9 +529,8 @@ def update_history_fields(entry_id):
 
 @app.route('/api/history/export', methods=['POST'])
 @jwt_required()
-@admin_required
 def history_export():
-    """Export history to CSV format."""
+    """Export history to CSV format - available to all authenticated roles."""
     current_user = get_jwt_identity()
     try:
         data = request.json or {}
@@ -529,7 +545,7 @@ def history_export():
                 return jsonify({'error': 'No data to export'}), 404
 
             df = pd.DataFrame(rows)
-            csv_data = df.to_csv(index=False)
+            csv_data = df.to_csv(sep=';', index=False, encoding='utf-8')
 
             return csv_data, 200, {
                 'Content-Type': 'text/csv',

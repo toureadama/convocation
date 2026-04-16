@@ -31,6 +31,12 @@ const History = ({ user, canViewAll }) => {
 
   const isTechniqueAdmin = user?.grade === 'Administrateur Technique' || user?.role === 'Administrateur Technique';
 
+  const isAdministrateur = user?.role === 'Administrateur';
+
+  const isVerificateur = user?.role === 'Vérificateur';
+
+  const isChrono = user?.role === 'Chrono';
+
   const isAdmin = !!user?.role; // TOUS ont export/filtres
 
   const fetchHistory = useCallback(async (pageNum, filterData) => {
@@ -309,11 +315,11 @@ const updateStatus = async (entryId, newStatus) => {
                 <th>N° Décl.</th>
                 <th>Objet</th>
                 <th>Admin</th>
-                <th>Date accusé</th>
+                <th>Date Accusé</th>
                 <th>Retour CDA</th>
                 <th>Fichiers</th>
-                <th>Statut</th>
-                <th>Numéro Chrono</th>
+                {!isVerificateur && !isChrono && <th>Statut</th>}
+                <th>N° Chrono</th>
                 {isTechniqueAdmin && <th>Actions</th>}
               </tr>
             </thead>
@@ -371,21 +377,23 @@ const updateStatus = async (entryId, newStatus) => {
                         </a>
                       ))}
                   </td>
-                  <td>
-                    {entry.user_login === user?.login ? (
-                      <select
-                        value={entry.statut || 'EN_COURS'}
-                        onChange={(e) => updateStatus(entry.id, e.target.value)}
-                      >
-                        <option value="EN_COURS">En cours</option>
-                        <option value="Levé">Levé</option>
-                        <option value="Confirmé">Confirmé</option>
-                        <option value="Refusé">Refusé</option>
-                      </select>
-                    ) : (
-                      <span className="statut-readonly">{entry.statut || 'En cours'}</span>
-                    )}
-                  </td>
+                  {!isVerificateur && !isChrono && (
+                    <td>
+                      {isAdministrateur ? (
+                        <select
+                          value={entry.statut || 'EN_COURS'}
+                          onChange={(e) => updateStatus(entry.id, e.target.value)}
+                        >
+                          <option value="EN_COURS">En cours</option>
+                          <option value="Levé">Levé</option>
+                          <option value="Confirmé">Confirmé</option>
+                          <option value="Refusé">Refusé</option>
+                        </select>
+                      ) : (
+                        <span className="statut-readonly">{entry.statut || 'En cours'}</span>
+                      )}
+                    </td>
+                  )}
                   <td>
                     {user?.role === 'Chrono' ? (
                       <input
