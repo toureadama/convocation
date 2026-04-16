@@ -139,6 +139,12 @@ function App() {
     }
   };
 
+  const handleNewConvocation = () => {
+    // Vide les résultats pour recommencer
+    setResults([]);
+    setError('');
+  };
+
   const userRole = user?.role || user?.grade;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
   const isAdminTechnique = userRole === ROLES.ADMIN_TECHNIQUE;
@@ -221,6 +227,8 @@ function App() {
                 loading={loading}
                 progress={progress}
                 currentUser={user}
+                successfullyGenerated={results.length > 0}
+                onNewConvocation={handleNewConvocation}
               />
               {error && <div className="error">{error}</div>}
               <Results results={results} />

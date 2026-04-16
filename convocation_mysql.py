@@ -54,58 +54,129 @@ class ConvocationGenerator:
     def _get_chef(self, signature_admin: str) -> str:
         return "Chef de Visite" if signature_admin=="COULIBALY KARIM" else "Chef de Visite Adjoint"
 
-    def _convert_to_pdf(self, docx_path: str, pdf_path: str):
-        """Convert DOCX to PDF using LibreOffice headless mode (cross-platform)."""
-        # Find LibreOffice executable
-        libreoffice_paths = {
-            'linux': [
-                '/usr/bin/libreoffice',
-                '/usr/bin/soffice',
-                '/opt/libreoffice/program/soffice',
-            ],
-            'win32': [
-                r'C:\Program Files\LibreOffice\program\soffice.exe',
-                r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
-            ],
-        }
+    def _convert_with_libreoffice(self, docx_path: str, pdf_path: str) -> bool:
+        """Try to convert DOCX to PDF using LibreOffice. Returns True if successful."""
+        try:
+            # Find LibreOffice executable
+            libreoffice_paths = {
+                'linux': [
+                    '/usr/bin/libreoffice',
+                    '/usr/bin/soffice',
+                    '/opt/libreoffice/program/soffice',
+                ],
+                'win32': [
+                    r'C:\Program Files\LibreOffice\program\soffice.exe',
+                    r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+                ],
+            }
 
-        soffice_exe = shutil.which('libreoffice') or shutil.which('soffice')
+            soffice_exe = shutil.which('libreoffice') or shutil.which('soffice')
 
-        if not soffice_exe:
-            for path in libreoffice_paths.get(sys.platform, []):
-                if os.path.exists(path):
-                    soffice_exe = path
-                    break
+            if not soffice_exe:
+                for path in libreoffice_paths.get(sys.platform, []):
+                    if os.path.exists(path):
+                        soffice_exe = path
+                        break
 
-        if not soffice_exe:
-            raise FileNotFoundError(
-                "LibreOffice not found. Install it from https://www.libreoffice.org/"
+            if not soffice_exe:
+                logging.warning("LibreOffice not found, will try Word if on Windows")
+                return False
+
+            # Convert using LibreOffice headless mode
+            output_dir = os.path.dirname(pdf_path) or '.'
+            cmd = [
+                soffice_exe,
+                '--headless',
+                '--convert-to', 'pdf',
+                '--outdir', output_dir,
+                docx_path
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env={**os.environ, 'HOME': os.path.expanduser('~')}
             )
 
-        # Convert using LibreOffice headless mode
-        output_dir = os.path.dirname(pdf_path) or '.'
-        cmd = [
-            soffice_exe,
-            '--headless',
-            '--convert-to', 'pdf',
-            '--outdir', output_dir,
-            docx_path
-        ]
+            if result.returncode != 0:
+                logging.warning(f"LibreOffice conversion failed: {result.stderr}")
+                return False
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=60,
-            env={**os.environ, 'HOME': os.path.expanduser('~')}
+            # Verify output file exists
+            if not os.path.exists(pdf_path):
+                logging.warning(f"PDF file not created by LibreOffice: {pdf_path}")
+                return False
+
+            logging.info(f"Successfully converted with LibreOffice: {pdf_path}")
+            return True
+
+        except Exception as e:
+            logging.warning(f"LibreOffice conversion error: {e}")
+            return False
+
+    def _convert_with_word(self, docx_path: str, pdf_path: str) -> bool:
+        """Try to convert DOCX to PDF using Microsoft Word. Returns True if successful."""
+        if sys.platform != 'win32':
+            logging.warning("Microsoft Word conversion only available on Windows")
+            return False
+
+        try:
+            import win32com.client
+            from pywintypes import com_error
+        except ImportError:
+            logging.warning("pywin32 not installed, cannot use Microsoft Word for conversion")
+            return False
+
+        try:
+            # Start Word application
+            word = win32com.client.Dispatch("Word.Application")
+            word.Visible = False
+            word.DisplayAlerts = False
+
+            # Open document
+            doc = word.Documents.Open(os.path.abspath(docx_path))
+
+            # Save as PDF
+            doc.SaveAs(
+                os.path.abspath(pdf_path),
+                FileFormat=17  # 17 = wdFormatPDF
+            )
+
+            # Close document
+            doc.Close()
+
+            # Quit Word
+            word.Quit()
+
+            logging.info(f"Successfully converted with Microsoft Word: {pdf_path}")
+            return True
+
+        except com_error as e:
+            logging.warning(f"Microsoft Word COM error: {e}")
+            return False
+        except Exception as e:
+            logging.warning(f"Microsoft Word conversion error: {e}")
+            return False
+
+    def _convert_to_pdf(self, docx_path: str, pdf_path: str):
+        """Convert DOCX to PDF using LibreOffice or Microsoft Word."""
+        # Try LibreOffice first (cross-platform)
+        if self._convert_with_libreoffice(docx_path, pdf_path):
+            return
+
+        # If on Windows and LibreOffice failed, try Microsoft Word
+        if sys.platform == 'win32':
+            if self._convert_with_word(docx_path, pdf_path):
+                return
+
+        # If we get here, both methods failed
+        raise RuntimeError(
+            "PDF conversion failed. Please install either:\n"
+            "1. LibreOffice (recommended, cross-platform): https://www.libreoffice.org/\n"
+            "2. Microsoft Word (Windows only) with pywin32: pip install pywin32"
         )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"LibreOffice conversion failed: {result.stderr}")
-
-        # Verify output file exists
-        if not os.path.exists(pdf_path):
-            raise RuntimeError(f"PDF file not created after conversion: {pdf_path}")
 
     def _get_company_by_cc(self, cc: str):
         conn = get_db_connection()

@@ -8,3 +8,5 @@ docxtpl==0.16.8
 gunicorn==22.0.0
 openpyxl==3.1.4
 python-dotenv==1.0.1
+pywin32==306; sys_platform == 'win32'
+

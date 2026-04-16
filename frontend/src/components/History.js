@@ -12,11 +12,6 @@ const DEFAULT_FILTERS = {
   statut: ''
 };
 
-const PENDING_FILTERS = {
-  admin: '',
-  statut: 'EN_COURS'
-};
-
 const PAGINATION = {
   limit: 10
 };
@@ -286,13 +281,6 @@ const updateStatus = async (entryId, newStatus) => {
             <button onClick={handleApplyFilters} className="filter-btn">
               Appliquer les filtres
             </button>
-            <button onClick={() => {
-              setFilters({ ...DEFAULT_FILTERS, ...PENDING_FILTERS, admin: user?.signature_name || '' });
-              setAppliedFilters({ ...DEFAULT_FILTERS, ...PENDING_FILTERS, admin: user?.signature_name || '' });
-              setPage(0);
-            }} className="pending-btn">
-              Mes En Attente
-            </button>
             <button onClick={clearFilters} className="clear-btn">
               Tout Afficher
             </button>
@@ -442,7 +430,7 @@ const updateStatus = async (entryId, newStatus) => {
             >
               Suiv →
             </button>
-            <button onClick={fetchHistory} className="refresh-btn">
+            <button onClick={() => fetchHistory(page, appliedFilters)} className="refresh-btn">
               🔄 Rafraîchir
             </button>
           </div>

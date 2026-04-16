@@ -1086,6 +1086,7 @@ def generate_convocation():
     # Validate required fields
     for field in required_fields:
         if not request.form.get(field):
+            logger.error(f"Missing required field: {field}")
             return jsonify({'error': f'Missing required field: {field}'}), 400
 
     user = get_jwt_identity()
@@ -1107,8 +1108,15 @@ def generate_convocation():
         for field in required_fields:
             cmd.extend([f'--{field}', request.form[field]])
 
+        logger.info(f"Executing command: {' '.join(cmd[:5])}... for user {user}")
+
         # Execute generation
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd='.')
+
+        logger.info(f"Generation process returncode: {result.returncode}")
+        logger.info(f"Generation stdout: {result.stdout}")
+        if result.stderr:
+            logger.warning(f"Generation stderr: {result.stderr}")
 
         if result.returncode != 0:
             logger.error(f"PDF generation failed: {result.stderr}")
@@ -1117,6 +1125,8 @@ def generate_convocation():
         # Parse output
         matches = re.findall(r'OK\s*:\s*([^\s\n\r]+)', result.stdout)
         results = [{'path': m, 'filename': os.path.basename(m)} for m in matches]
+
+        logger.info(f"Generated {len(results)} file(s): {[r['filename'] for r in results]}")
 
         # Save to history
         with get_db_context() as (conn, cursor):
@@ -1144,9 +1154,10 @@ def generate_convocation():
         return jsonify({'success': True, 'results': results})
 
     except subprocess.TimeoutExpired:
+        logger.error("PDF generation timeout")
         return jsonify({'error': 'Generation timeout'}), 504
     except Exception as e:
-        logger.error(f"Generation error: {e}")
+        logger.error(f"Generation error: {type(e).__name__}: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 # ============================================================================

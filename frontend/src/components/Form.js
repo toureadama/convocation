@@ -19,7 +19,7 @@ const DOSSIER_TYPES = [
   { value: 'DARRV', label: 'DARRV' }
 ];
 
-const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
+const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGenerated = false, onNewConvocation }) => {
   const [formData, setFormData] = useState({
     cc: '',
     code_imp: '',
@@ -27,7 +27,7 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
     num_declaration: '',
     date_declaration: '',
     type_dossier: '',
-    objet: '',
+    fraude: '',
     signature_admin: ''
   });
 
@@ -143,7 +143,7 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
       num_declaration: '',
       date_declaration: '',
       type_dossier: '',
-      objet: '',
+      fraude: '',
       signature_admin: ''
     });
     setSelectedCompany('');
@@ -300,13 +300,16 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser }) => {
         {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
       </button>
       
-      {/* Reset button après génération */}
-      {!loading && isFormValid && (
+      {/* Bouton "Nouvelle Convocation" - apparait SEULEMENT après génération réussie */}
+      {successfullyGenerated && !loading && (
         <button
           type="button"
-          onClick={resetForm}
+          onClick={() => {
+            resetForm();
+            if (onNewConvocation) onNewConvocation();
+          }}
           className="reset-btn"
-          title="Vider formulaire pour nouvelle convocation"
+          title="Réinitialiser formulaire pour nouvelle convocation"
         >
           🗑️ Nouvelle Convocation
         </button>
