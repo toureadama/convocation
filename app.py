@@ -1059,9 +1059,14 @@ def generate_convocation():
     try:
         with get_db_context() as (conn, cursor):
             # Get next convocation number
-            cursor.execute('SELECT COUNT(*) as cnt FROM history WHERE user_login = %s', (user,))
-            count = cursor.fetchone()['cnt']
-            next_num = f'{count + 1:04d}'
+            # Numéro Chrono: manuel depuis form ou auto pour autres
+            num_convoc = request.form.get('num_convoc', '')
+            if num_convoc:
+                next_num = num_convoc.zfill(4)
+            else:
+                cursor.execute('SELECT COUNT(*) as cnt FROM history WHERE user_login = %s', (user,))
+                count = cursor.fetchone()['cnt']
+                next_num = f'{count + 1:04d}'
 
         # Build command
         cmd = [sys.executable, 'convocation_mysql.py', '--num_convoc', next_num]
