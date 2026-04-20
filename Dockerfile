@@ -30,10 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM python:3.11-alpine AS runtime
 # Install minimal deps pour LibreOffice + fonts
 RUN apk add --no-cache \
-    libstdc++ fontconfig ttf-dejavu curl bash && \
-    # Copy ONLY LibreOffice binaries (no docs)
-    mkdir -p /opt/libreoffice && \
-    cp -r /opt/* /opt/libreoffice/ || true
+    libstdc++ fontconfig ttf-dejavu curl bash
+
+# Copy LibreOffice from previous stage
+COPY --from=libreoffice-minimal /opt/LO-core /opt/libreoffice/
 
 WORKDIR /app
 
@@ -45,13 +45,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py db_config.py convocation_mysql.py ./
 COPY Convocation_modele.docx .
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
-RUN mkdir -p output
+RUN mkdir -p output && chmod 755 output
 
 # LibreOffice PATH
-ENV PATH="/opt/libreoffice/program:${PATH}"
+ENV PATH="/opt/libreoffice/LO-core:${PATH}"
 ENV HOME=/root
 ENV PYTHONUNBUFFERED=1
-ENV LO_PATH=/opt/libreoffice/program/soffice
+ENV LO_PATH=/opt/libreoffice/LO-core/soffice
 
 # Healthcheck amélioré
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

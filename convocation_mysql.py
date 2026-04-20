@@ -64,9 +64,10 @@ class ConvocationGenerator:
                 shutil.which('libreoffice'),
                 shutil.which('soffice'),
                 '/usr/bin/libreoffice',
-                '/usr/bin/soffice', 
+                '/usr/bin/soffice',
                 '/opt/libreoffice/program/soffice',
-                os.getenv('LO_PATH', '/opt/libreoffice/program/soffice')
+                '/opt/libreoffice/LO-core/soffice',
+                os.getenv('LO_PATH', '/opt/libreoffice/LO-core/soffice')
             ],
             'darwin': [  # macOS
                 shutil.which('libreoffice'),
