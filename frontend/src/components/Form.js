@@ -19,7 +19,7 @@ const DOSSIER_TYPES = [
   { value: 'DARRV', label: 'DARRV' }
 ];
 
-const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGenerated = false, onNewConvocation }) => {
+const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGenerated = false }) => {
   const [formData, setFormData] = useState({
     cc: '',
     code_imp: '',
@@ -149,6 +149,16 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
     setSelectedCompany('');
     setSelectedOperateur('');
   }, [currentUser]);
+
+  // Auto-reset form 2 seconds after successful generation (allows user to see results first)
+  useEffect(() => {
+    if (successfullyGenerated && !loading) {
+      const timer = setTimeout(() => {
+        resetForm();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [successfullyGenerated, loading, resetForm]);
 
   const isFormValid = formData.cc && formData.code_imp && formData.verificateur &&
                       formData.num_declaration && formData.date_declaration &&
@@ -299,21 +309,6 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
       >
         {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
       </button>
-      
-      {/* Bouton "Nouvelle Convocation" - apparait SEULEMENT après génération réussie */}
-      {successfullyGenerated && !loading && (
-        <button
-          type="button"
-          onClick={() => {
-            resetForm();
-            if (onNewConvocation) onNewConvocation();
-          }}
-          className="reset-btn"
-          title="Réinitialiser formulaire pour nouvelle convocation"
-        >
-          🗑️ Nouvelle Convocation
-        </button>
-      )}
     </form>
   );
 };

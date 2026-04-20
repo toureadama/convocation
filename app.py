@@ -15,25 +15,51 @@ from contextlib import contextmanager
 import logging
 from dotenv import load_dotenv
 
+# Load environment variables FIRST - before any imports that depend on them
+load_dotenv('secrets.env')
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import bcrypt
 import pandas as pd
 import mysql.connector
 
 from db_config import get_db_connection, close_connection
 
-# Load environment variables
-load_dotenv()
-
 # ============================================================================
 # Application Configuration
 # ============================================================================
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'douanes-local-jwt-super-secure-2024')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours (in production, tokens refresh every 10 min anyway)
+
+# Generate strong JWT secret if not provided, or use environment variable
+JWT_SECRET = os.getenv('JWT_SECRET_KEY')
+if not JWT_SECRET:
+    # Generate a random 32-byte secret key (256 bits) for development only
+    JWT_SECRET = secrets.token_urlsafe(32)
+    if os.getenv('FLASK_ENV') == 'production':
+        # In production, MUST be explicitly set
+        raise RuntimeError(
+            "[CRITICAL] JWT_SECRET_KEY not set in production!\n"
+            "Set JWT_SECRET_KEY in your Render environment variables."
+        )
+    else:
+        print("[INFO] DEV MODE: Generated temporary JWT secret (not persisted)")
+
+app.config['JWT_SECRET_KEY'] = JWT_SECRET
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours
+
+# Rate limiting
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
 jwt = JWTManager(app)
 
 # ============================================================================
@@ -55,12 +81,26 @@ CORS_CONFIG = {
 
 CORS(app, origins=CORS_CONFIG.get(ENVIRONMENT, CORS_CONFIG['development']), supports_credentials=True)
 
+# ============================================================================
+# Logging Configuration with Rotation
+# ============================================================================
+
+from logging.handlers import RotatingFileHandler
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Add rotating file handler (10MB files, keep 5 backups)
+file_handler = RotatingFileHandler('app.log', maxBytes=10485760, backupCount=5)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+))
+logger.addHandler(file_handler)
 
 # ============================================================================
 # Constants
@@ -136,25 +176,8 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def technical_admin_required(f):
-    """Decorator to require admin technique role (for user/code management)."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        current_user = get_jwt_identity()
-        try:
-            with get_db_context() as (conn, cursor):
-                cursor.execute('SELECT role FROM users WHERE login = %s', (current_user,))
-                user_row = cursor.fetchone()
-                user_role = user_row['role'] if user_row else 'Vérificateur'
-
-                if user_role != 'Administrateur Technique':
-                    return jsonify({'error': 'Admin access required'}), 403
-        except Exception as e:
-            logger.error(f"Admin check failed: {e}")
-            return jsonify({'error': 'Access denied'}), 403
-
-        return f(*args, **kwargs)
-    return decorated_function
+# Alias for backward compatibility (same functionality as admin_required)
+technical_admin_required = admin_required
 
 def generate_access_required(f):
     """Decorator pour génération PDF: Vérificateur + Chrono."""
@@ -199,7 +222,6 @@ def init_db():
             grade VARCHAR(255) NOT NULL,
             login VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
-            plain_password VARCHAR(255),
             is_active TINYINT DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             role VARCHAR(50) DEFAULT 'Vérificateur',
@@ -226,7 +248,12 @@ def init_db():
             statut VARCHAR(50) DEFAULT 'EN_COURS',
             INDEX idx_user_login (user_login),
             INDEX idx_timestamp (timestamp),
-            INDEX idx_cc (cc)
+            INDEX idx_cc (cc),
+            INDEX idx_statut (statut),
+            INDEX idx_code_imp (code_imp),
+            INDEX idx_signature_admin (signature_admin),
+            INDEX idx_date_declaration (date_declaration),
+            INDEX idx_verificateur (verificateur)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
         cursor.execute('''CREATE TABLE IF NOT EXISTS code_agree (
@@ -248,41 +275,56 @@ def init_db():
             # Column already exists, ignore error
             pass
 
-        # Create default admin if not exists
+        # Create default admin if not exists (only in dev mode or if env var set)
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='admin'")
         if cursor.fetchone()['cnt'] == 0:
-            password = 'admin123'
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
+            if admin_password == 'admin123' and os.getenv('FLASK_ENV') == 'production':
+                raise RuntimeError(
+                    "[CRITICAL] Cannot use default admin password in production!\n"
+                    "Set ADMIN_PASSWORD in your Render environment variables."
+                )
+            password_hash = bcrypt.hashpw(admin_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             cursor.execute(
-                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                ('Admin', 'Super', 'Administrateur', 'admin', password_hash, '***', 'Super Administrateur')
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, role) VALUES (%s, %s, %s, %s, %s, %s)",
+                ('Admin', 'Super', 'Administrateur', 'admin', password_hash, 'Super Administrateur')
             )
-            logger.info("✅ Admin created: admin/admin123 (Super Administrateur)")
+            logger.info("[OK] Admin created: admin/* (Super Administrateur)")
 
         # Create default Admin Technique if not exists
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='info'")
         if cursor.fetchone()['cnt'] == 0:
-            password = 'info123'
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            info_password = os.getenv('INFO_PASSWORD', 'info123')
+            if info_password == 'info123' and os.getenv('FLASK_ENV') == 'production':
+                raise RuntimeError(
+                    "[CRITICAL] Cannot use default info password in production!\n"
+                    "Set INFO_PASSWORD in your Render environment variables."
+                )
+            password_hash = bcrypt.hashpw(info_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             cursor.execute(
-                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                ('Info', 'Technique', 'Administrateur Technique', 'info', password_hash, '***', 'Administrateur Technique')
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, role) VALUES (%s, %s, %s, %s, %s, %s)",
+                ('Info', 'Technique', 'Administrateur Technique', 'info', password_hash, 'Administrateur Technique')
             )
-            logger.info("✅ Admin Technique created: info/info123 (Administrateur Technique)")
+            logger.info("[OK] Admin Technique created: info/* (Administrateur Technique)")
 
         # Create default Chrono user
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='chrono'")
         if cursor.fetchone()['cnt'] == 0:
-            password = 'chrono123'
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            chrono_password = os.getenv('CHRONO_PASSWORD', 'chrono123')
+            if chrono_password == 'chrono123' and os.getenv('FLASK_ENV') == 'production':
+                raise RuntimeError(
+                    "[CRITICAL] Cannot use default chrono password in production!\n"
+                    "Set CHRONO_PASSWORD in your Render environment variables."
+                )
+            password_hash = bcrypt.hashpw(chrono_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             cursor.execute(
-                "INSERT INTO users (nom, prenom, grade, login, password_hash, plain_password, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                ('Chrono', 'Service', 'Chrono', 'chrono', password_hash, '***', 'Chrono', 'CHRONO SERVICE')
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                ('Chrono', 'Service', 'Chrono', 'chrono', password_hash, 'Chrono', 'CHRONO SERVICE')
             )
-            logger.info("✅ Chrono user created: chrono/chrono123")
+            logger.info("[OK] Chrono user created: chrono/* (Chrono)")
 
         conn.commit()
-        logger.info("✅ MySQL database initialized successfully")
+        logger.info("[OK] MySQL database initialized successfully")
         return True
 
     except Exception as e:
@@ -305,6 +347,7 @@ def health():
         return jsonify({'status': 'ERROR', 'db': 'Connection failed'}), 500
 
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute")  # Prevent brute force
 def login():
     """Authenticate user and return JWT token."""
     data = request.json
@@ -408,6 +451,7 @@ def build_history_query(current_user, filters, include_pagination=True):
             ('fraude', 'h.fraude', 'LIKE'),
             ('admin', 'h.signature_admin', 'LIKE'),
             ('statut', 'h.statut', '='),
+            ('statut_approbation', 'h.statut_approbation', '='),
         ]
 
         for key, col, op in filter_map:
@@ -617,6 +661,88 @@ def update_history_status(entry_id):
         logger.error(f"Status update error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/history/<int:entry_id>/approve', methods=['POST'])
+@jwt_required()
+def approve_convocation(entry_id):
+    """Approve convocation for printing - signature_admin only."""
+    current_user = get_jwt_identity()
+
+    try:
+        with get_db_context() as (conn, cursor):
+            # 1. Check entry exists + get signature_admin
+            cursor.execute('SELECT id, signature_admin, statut_approbation FROM history WHERE id = %s', (entry_id,))
+            entry = cursor.fetchone()
+
+            if not entry:
+                return jsonify({'error': 'Entry not found'}), 404
+
+            if entry['statut_approbation'] == 'APPROUVEE':
+                return jsonify({'error': 'Convocation already approved'}), 400
+
+            # 2. Get current user full name (nom + prenom)
+            cursor.execute('SELECT nom, prenom FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            if not user_row:
+                return jsonify({'error': 'User not found'}), 403
+
+            user_fullname = f"{user_row['nom']} {user_row['prenom']}".strip()
+
+            # 3. Check if user is the signature_admin
+            if user_fullname not in entry['signature_admin']:
+                return jsonify({'error': f'Accès refusé. Seul {entry["signature_admin"]} peut approuver cette convocation.'}), 403
+
+            # 4. Update statut_approbation
+            cursor.execute('UPDATE history SET statut_approbation = %s WHERE id = %s', ('APPROUVEE', entry_id))
+            conn.commit()
+
+            logger.info(f"Convocation {entry_id} approved by {user_fullname}")
+            return jsonify({'success': True, 'message': f'Convocation approuvée par {user_fullname}'})
+
+    except Exception as e:
+        logger.error(f"Approval error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/history/<int:entry_id>/reject', methods=['POST'])
+@jwt_required()
+def reject_convocation(entry_id):
+    """Reject convocation - signature_admin only."""
+    current_user = get_jwt_identity()
+
+    try:
+        with get_db_context() as (conn, cursor):
+            # 1. Check entry exists + get signature_admin
+            cursor.execute('SELECT id, signature_admin, statut_approbation FROM history WHERE id = %s', (entry_id,))
+            entry = cursor.fetchone()
+
+            if not entry:
+                return jsonify({'error': 'Entry not found'}), 404
+
+            if entry['statut_approbation'] == 'REJETEE':
+                return jsonify({'error': 'Convocation already rejected'}), 400
+
+            # 2. Get current user full name (nom + prenom)
+            cursor.execute('SELECT nom, prenom FROM users WHERE login = %s', (current_user,))
+            user_row = cursor.fetchone()
+            if not user_row:
+                return jsonify({'error': 'User not found'}), 403
+
+            user_fullname = f"{user_row['nom']} {user_row['prenom']}".strip()
+
+            # 3. Check if user is the signature_admin
+            if user_fullname not in entry['signature_admin']:
+                return jsonify({'error': f'Accès refusé. Seul {entry["signature_admin"]} peut rejeter cette convocation.'}), 403
+
+            # 4. Update statut_approbation
+            cursor.execute('UPDATE history SET statut_approbation = %s WHERE id = %s', ('REJETEE', entry_id))
+            conn.commit()
+
+            logger.info(f"Convocation {entry_id} rejected by {user_fullname}")
+            return jsonify({'success': True, 'message': f'Convocation rejetée par {user_fullname}'})
+
+    except Exception as e:
+        logger.error(f"Rejection error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 @app.route('/api/history/<int:entry_id>', methods=['DELETE'])
 @jwt_required()
 def delete_history_entry(entry_id):
@@ -726,9 +852,9 @@ def create_user():
             # Hash password
             password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-            # Insert user
+            # Insert user (NO plain_password stored for security)
             cursor.execute(
-                'INSERT INTO users (civilite, nom, prenom, grade, login, password_hash, plain_password, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                'INSERT INTO users (civilite, nom, prenom, grade, login, password_hash, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
                 (
                     data.get('civilite', ''),
                     data['nom'],
@@ -736,7 +862,6 @@ def create_user():
                     requested_role,
                     login,
                     password_hash,
-                    password,
                     requested_role,
                     signature_name
                 )
@@ -866,11 +991,11 @@ def update_user_credentials(user_id):
             if cursor.fetchone():
                 return jsonify({'error': 'Login already exists'}), 400
 
-            # Update credentials
+            # Update credentials (NO plain_password for security)
             password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             cursor.execute(
-                'UPDATE users SET login = %s, password_hash = %s, plain_password = %s WHERE id = %s',
-                (new_login, password_hash, new_password, user_id)
+                'UPDATE users SET login = %s, password_hash = %s WHERE id = %s',
+                (new_login, password_hash, user_id)
             )
             conn.commit()
             
@@ -1078,6 +1203,7 @@ def delete_code_operateur(code):
 
 @app.route('/api/generate', methods=['POST'])
 @jwt_required()
+@limiter.limit("30 per hour")  # Prevent PDF generation spam
 @generate_access_required
 def generate_convocation():
     """Generate convocation PDF."""
@@ -1111,7 +1237,7 @@ def generate_convocation():
         logger.info(f"Executing command: {' '.join(cmd[:5])}... for user {user}")
 
         # Execute generation
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd='.')
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd='.')
 
         logger.info(f"Generation process returncode: {result.returncode}")
         logger.info(f"Generation stdout: {result.stdout}")
@@ -1131,8 +1257,8 @@ def generate_convocation():
         # Save to history
         with get_db_context() as (conn, cursor):
             cursor.execute(
-                '''INSERT INTO history (timestamp, verificateur, num_declaration, date_declaration, type_dossier, fraude, signature_admin, cc, code_imp, num_generated, filenames, user_login)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                '''INSERT INTO history (timestamp, verificateur, num_declaration, date_declaration, type_dossier, fraude, signature_admin, cc, code_imp, num_generated, filenames, user_login, statut_approbation)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                 (
                     datetime.now().isoformat(),
                     request.form['verificateur'],
@@ -1145,7 +1271,8 @@ def generate_convocation():
                     request.form['code_imp'],
                     len(results),
                     ';'.join(r['filename'] for r in results),
-                    user
+                    user,
+                    'EN_ATTENTE_APPROBATION'
                 )
             )
             conn.commit()
@@ -1154,8 +1281,8 @@ def generate_convocation():
         return jsonify({'success': True, 'results': results})
 
     except subprocess.TimeoutExpired:
-        logger.error("PDF generation timeout")
-        return jsonify({'error': 'Generation timeout'}), 504
+        logger.error("PDF generation timeout (120s exceeded)")
+        return jsonify({'error': 'Generation timeout: PDF conversion took too long. LibreOffice may need more time.'}), 504
     except Exception as e:
         logger.error(f"Generation error: {type(e).__name__}: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
@@ -1165,9 +1292,57 @@ def generate_convocation():
 # ============================================================================
 
 @app.route('/output/<path:filename>')
+@jwt_required()
 def serve_pdf(filename):
-    """Serve generated PDF files."""
-    return send_from_directory('output', filename)
+    """Serve generated PDF files - only if approved."""
+    current_user = get_jwt_identity()
+
+    try:
+        with get_db_context() as (conn, cursor):
+            # Find the history entry for this filename
+            cursor.execute(
+                'SELECT id, user_login, statut_approbation, signature_admin FROM history WHERE filenames LIKE %s',
+                (f'%{filename}%',)
+            )
+            entry = cursor.fetchone()
+
+            if not entry:
+                return jsonify({'error': 'File not found in history'}), 404
+
+            # Get user role and full name
+            cursor.execute('SELECT role, nom, prenom FROM users WHERE login = %s', (current_user,))
+            user_info = cursor.fetchone()
+            if not user_info:
+                return jsonify({'error': 'User not found'}), 403
+
+            user_role = user_info['role']
+            user_fullname = f"{user_info['nom']} {user_info['prenom']}".strip()
+
+            # Check access permissions
+            can_access = False
+
+            if entry['user_login'] == current_user:
+                # Owner can access their own files
+                can_access = True
+            elif user_role in ('Super Administrateur', 'Administrateur Technique'):
+                # Super admins can access all files
+                can_access = True
+            elif user_role == 'Administrateur' and user_fullname in entry['signature_admin']:
+                # Regular admin can access files they approved
+                can_access = True
+            else:
+                return jsonify({'error': 'Access denied'}), 403
+
+            # Check approval status (all users need approved status)
+            if entry['statut_approbation'] != 'APPROUVEE':
+                return jsonify({'error': 'Convocation not approved for printing'}), 403
+
+        # Serve the file
+        return send_from_directory('output', filename)
+
+    except Exception as e:
+        logger.error(f"PDF serving error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { refreshToken, apiFetch, API_BASE_URL } from './api';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-loaded components for better initial load performance
 const Form = lazy(() => import('./components/Form'));
@@ -97,10 +98,16 @@ function App() {
   };
 
   const simulateProgress = () => {
+    // Progressive simulation that reaches ~99% after ~90 seconds
+    // (LibreOffice PDF conversion can take 30-120 seconds)
     setProgress(10);
-    setTimeout(() => setProgress(40), 800);
-    setTimeout(() => setProgress(70), 2000);
-    setTimeout(() => setProgress(100), 3500);
+    setTimeout(() => setProgress(25), 1000);
+    setTimeout(() => setProgress(40), 3000);
+    setTimeout(() => setProgress(55), 8000);
+    setTimeout(() => setProgress(70), 15000);
+    setTimeout(() => setProgress(80), 30000);
+    setTimeout(() => setProgress(90), 60000);
+    // Stop at 99% to avoid showing 100% before actual completion
   };
 
   const handleGenerate = async (formData) => {
@@ -139,12 +146,6 @@ function App() {
     }
   };
 
-  const handleNewConvocation = () => {
-    // Vide les résultats pour recommencer
-    setResults([]);
-    setError('');
-  };
-
   const userRole = user?.role || user?.grade;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
   const isAdminTechnique = userRole === ROLES.ADMIN_TECHNIQUE;
@@ -164,7 +165,8 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <ErrorBoundary>
+      <div className="App">
       <header className="App-header">
         <h1>Générateur Convocations Douanes CI</h1>
         <div className="user-info">
@@ -228,7 +230,7 @@ function App() {
                 progress={progress}
                 currentUser={user}
                 successfullyGenerated={results.length > 0}
-                onNewConvocation={handleNewConvocation}
+
               />
               {error && <div className="error">{error}</div>}
               <Results results={results} />
@@ -242,7 +244,8 @@ function App() {
           {canManageCodes && activeTab === TABS.CODE_OPERATEUR && <CodeOperateur />}
         </Suspense>
       </main>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
 

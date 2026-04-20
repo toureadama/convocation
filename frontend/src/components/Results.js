@@ -1,39 +1,7 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import './Results.css';
 
-// Use backend URL directly for PDF links
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 const Results = ({ results }) => {
-  const handlePreview = useCallback((result) => {
-    const url = `${API_BASE_URL}/output/${result.filename}`;
-    window.open(url, '_blank');
-  }, []);
-
-  const handleDownload = useCallback((result) => {
-    const url = `${API_BASE_URL}/output/${result.filename}`;
-    
-    fetch(url)
-      .then(response => {
-        if (!response.ok) throw new Error('File not found');
-        return response.blob();
-      })
-      .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = result.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      })
-      .catch(err => {
-        console.error('Download error:', err);
-        window.open(url, '_blank');
-      });
-  }, []);
-
   if (!results || results.length === 0) return null;
 
   return (
@@ -51,25 +19,8 @@ const Results = ({ results }) => {
               <span className="file-name">{result.filename}</span>
             </div>
 
-            <div className="result-actions">
-              <button
-                onClick={() => handlePreview(result)}
-                className="preview-btn"
-                title="Aperçu dans un nouvel onglet"
-              >
-                👁️ Aperçu
-              </button>
-              <button
-                onClick={() => handleDownload(result)}
-                className="download-btn"
-                title="Télécharger le PDF"
-              >
-                📥 PDF
-              </button>
-            </div>
-
-            <span className="status success" title="Généré avec succès">
-              ✅
+            <span className="status pending" title="Généré - En attente d'approbation">
+              ⏳ En attente d'approbation
             </span>
           </div>
         ))}

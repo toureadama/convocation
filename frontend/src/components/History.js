@@ -9,7 +9,8 @@ const DEFAULT_FILTERS = {
   verif: '',
   fraude: '',
   admin: '',
-  statut: ''
+  statut: '',
+  statut_approbation: ''
 };
 
 const PAGINATION = {
@@ -33,6 +34,42 @@ const History = ({ user, canViewAll }) => {
   const isChrono = user?.role === 'Chrono';
 
   const isAdmin = !!user?.role; // TOUS ont export/filtres
+
+  const handleDownload = useCallback(async (filename) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('SESSION_EXPIRED');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/output/${filename}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur lors du téléchargement (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
+      alert(`Erreur de téléchargement: ${err.message}`);
+    }
+  }, []);
 
   const fetchHistory = useCallback(async (pageNum, filterData) => {
     setLoading(true);
@@ -124,6 +161,60 @@ const updateStatus = async (entryId, newStatus) => {
 
       setHistory(prev => prev.map(entry =>
         entry.id === entryId ? { ...entry, statut: newStatus } : entry
+      ));
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
+      alert(err.message);
+    }
+  };
+
+  const approveConvocation = async (entryId) => {
+    if (!confirm('Êtes-vous sûr de vouloir approuver cette convocation ?')) return;
+
+    try {
+      const response = await apiFetch(`/api/history/${entryId}/approve`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'approbation');
+      }
+
+      const result = await response.json();
+      alert(result.message);
+
+      setHistory(prev => prev.map(entry =>
+        entry.id === entryId ? { ...entry, statut_approbation: 'APPROUVEE' } : entry
+      ));
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
+      alert(err.message);
+    }
+  };
+
+  const rejectConvocation = async (entryId) => {
+    if (!confirm('Êtes-vous sûr de vouloir rejeter cette convocation ?')) return;
+
+    try {
+      const response = await apiFetch(`/api/history/${entryId}/reject`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du rejet');
+      }
+
+      const result = await response.json();
+      alert(result.message);
+
+      setHistory(prev => prev.map(entry =>
+        entry.id === entryId ? { ...entry, statut_approbation: 'REJETEE' } : entry
       ));
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
@@ -278,6 +369,15 @@ const updateStatus = async (entryId, newStatus) => {
               <option value="Confirmé">Confirmé</option>
               <option value="Refusé">Refusé</option>
             </select>
+            <select
+              value={filters.statut_approbation}
+              onChange={(e) => handleFilterChange('statut_approbation', e.target.value)}
+            >
+              <option value="">Tous statuts approbation</option>
+              <option value="EN_ATTENTE_APPROBATION">En attente</option>
+              <option value="APPROUVEE">Approuvée</option>
+              <option value="REJETEE">Rejetée</option>
+            </select>
             <button onClick={handleApplyFilters} className="filter-btn">
               Appliquer les filtres
             </button>
@@ -306,6 +406,7 @@ const updateStatus = async (entryId, newStatus) => {
                 <th>Date Accusé</th>
                 <th>Retour CDA</th>
                 <th>Fichiers</th>
+                <th>Statut Approbation</th>
                 {!isVerificateur && !isChrono && <th>Statut</th>}
                 <th>N° Chrono</th>
                 {isTechniqueAdmin && <th>Actions</th>}
@@ -353,17 +454,44 @@ const updateStatus = async (entryId, newStatus) => {
                       .split(';')
                       .filter(f => f)
                       .map((f, i) => (
-                        <a
-                          key={i}
-                          href={`${API_BASE_URL}/output/${f}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="download-link"
-                          download={f}
-                        >
-                          📄 {f}
-                        </a>
+                        entry.statut_approbation === 'APPROUVEE' ? (
+                          <button
+                            key={i}
+                            onClick={() => handleDownload(f)}
+                            className="download-link"
+                            title={`Télécharger ${f}`}
+                          >
+                            📄 {f}
+                          </button>
+                        ) : (
+                          <span key={i} className="download-disabled" title="En attente d'approbation">
+                            📄 {f} (Non approuvé)
+                          </span>
+                        )
                       ))}
+                  </td>
+                  <td>
+                    <span className={`statut-approbation statut-${(entry.statut_approbation || 'EN_ATTENTE_APPROBATION').toLowerCase()}`}>
+                      {entry.statut_approbation === 'EN_ATTENTE_APPROBATION' && 'En attente'}
+                      {entry.statut_approbation === 'APPROUVEE' && 'Approuvée'}
+                      {entry.statut_approbation === 'REJETEE' && 'Rejetée'}
+                    </span>
+                    {isAdministrateur && entry.statut_approbation === 'EN_ATTENTE_APPROBATION' && (
+                      <div className="approval-buttons">
+                        <button
+                          className="approve-btn"
+                          onClick={() => approveConvocation(entry.id)}
+                        >
+                          ✓ Approuver
+                        </button>
+                        <button
+                          className="reject-btn"
+                          onClick={() => rejectConvocation(entry.id)}
+                        >
+                          ✗ Rejeter
+                        </button>
+                      </div>
+                    )}
                   </td>
                   {!isVerificateur && !isChrono && (
                     <td>

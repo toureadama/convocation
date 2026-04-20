@@ -55,32 +55,78 @@ class ConvocationGenerator:
         return "Chef de Visite" if signature_admin=="COULIBALY KARIM" else "Chef de Visite Adjoint"
 
     def _convert_with_libreoffice(self, docx_path: str, pdf_path: str) -> bool:
-        """Try to convert DOCX to PDF using LibreOffice. Returns True if successful."""
+        """Enhanced LibreOffice detection - Windows/Linux/Mac. Phase 1 Opti."""
+        logging.info(f"[PDF] Converting {docx_path} → {pdf_path}")
+        
+        # ✅ PHASE 1: Robust multi-platform detection
+        paths = {
+            'linux': [
+                shutil.which('libreoffice'),
+                shutil.which('soffice'),
+                '/usr/bin/libreoffice',
+                '/usr/bin/soffice', 
+                '/opt/libreoffice/program/soffice',
+                os.getenv('LO_PATH', '/opt/libreoffice/program/soffice')
+            ],
+            'darwin': [  # macOS
+                shutil.which('libreoffice'),
+                '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+            ],
+            'win32': [
+                shutil.which('soffice'),
+                shutil.which('libreoffice'),
+                r'C:\Program Files\LibreOffice\program\soffice.exe',
+                r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+                r'C:\Program Files\LibreOffice 7*\program\soffice.exe',  # Wildcard
+                os.getenv('LO_PATH'),
+            ]
+        }
+        
+        candidate_paths = paths.get(sys.platform, paths['linux'])
+        soffice_exe = None
+        
+        # Test all candidates
+        for path in candidate_paths:
+            if path and isinstance(path, str) and os.path.exists(path) and os.access(path, os.X_OK):
+                soffice_exe = path
+                logging.info(f"[PDF✓] LibreOffice found: {soffice_exe}")
+                break
+        
+        if not soffice_exe:
+            logging.warning("[PDF✗] LibreOffice NOT found - paths exhausted")
+            return False
+
+        # Enhanced conversion with timeout + cleanup
+        output_dir = os.path.dirname(pdf_path) or '.'
+        cmd = [
+            soffice_exe, '--headless', '--nocrash-report',
+            '--convert-to', 'pdf:writer_pdf_Export',
+            '--outdir', output_dir, docx_path
+        ]
+        
+        env = {**os.environ, 
+               'HOME': os.path.expanduser('~'),
+               'LD_LIBRARY_PATH': '/opt/libreoffice/program:$LD_LIBRARY_PATH'}
+        
         try:
-            # Find LibreOffice executable
-            libreoffice_paths = {
-                'linux': [
-                    '/usr/bin/libreoffice',
-                    '/usr/bin/soffice',
-                    '/opt/libreoffice/program/soffice',
-                ],
-                'win32': [
-                    r'C:\Program Files\LibreOffice\program\soffice.exe',
-                    r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
-                ],
-            }
-
-            soffice_exe = shutil.which('libreoffice') or shutil.which('soffice')
-
-            if not soffice_exe:
-                for path in libreoffice_paths.get(sys.platform, []):
-                    if os.path.exists(path):
-                        soffice_exe = path
-                        break
-
-            if not soffice_exe:
-                logging.warning("LibreOffice not found, will try Word if on Windows")
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=90,
+                env=env, cwd=output_dir
+            )
+            
+            if result.returncode == 0 and os.path.exists(pdf_path):
+                logging.info(f"[PDF✓] LibreOffice success: {pdf_path}")
+                return True
+            else:
+                logging.warning(f"[PDF✗] LO failed (code {result.returncode}): {result.stderr[:200]}")
                 return False
+                
+        except subprocess.TimeoutExpired:
+            logging.error("[PDF✗] LibreOffice timeout (90s)")
+            return False
+        except Exception as e:
+            logging.error(f"[PDF✗] LibreOffice error: {e}")
+            return False
 
             # Convert using LibreOffice headless mode
             output_dir = os.path.dirname(pdf_path) or '.'
@@ -117,47 +163,42 @@ class ConvocationGenerator:
             return False
 
     def _convert_with_word(self, docx_path: str, pdf_path: str) -> bool:
-        """Try to convert DOCX to PDF using Microsoft Word. Returns True if successful."""
+        """Enhanced MS Word fallback - Windows only. Phase 1."""
         if sys.platform != 'win32':
-            logging.warning("Microsoft Word conversion only available on Windows")
             return False
 
         try:
             import win32com.client
+            import win32api
             from pywintypes import com_error
         except ImportError:
-            logging.warning("pywin32 not installed, cannot use Microsoft Word for conversion")
+            logging.info("[PDF] pywin32 missing - Word fallback disabled")
             return False
 
         try:
-            # Start Word application
+            # Verify Word installed via registry/COM
             word = win32com.client.Dispatch("Word.Application")
+            if not word:
+                logging.warning("[PDF] Word COM unavailable")
+                return False
+                
             word.Visible = False
-            word.DisplayAlerts = False
-
-            # Open document
+            word.DisplayAlerts = 0  # wdAlertsNone
+            
             doc = word.Documents.Open(os.path.abspath(docx_path))
-
-            # Save as PDF
-            doc.SaveAs(
-                os.path.abspath(pdf_path),
-                FileFormat=17  # 17 = wdFormatPDF
-            )
-
-            # Close document
+            doc.SaveAs(os.path.abspath(pdf_path), FileFormat=17)  # PDF
             doc.Close()
-
-            # Quit Word
             word.Quit()
-
-            logging.info(f"Successfully converted with Microsoft Word: {pdf_path}")
-            return True
-
-        except com_error as e:
-            logging.warning(f"Microsoft Word COM error: {e}")
-            return False
+            
+            if os.path.exists(pdf_path):
+                logging.info(f"[PDF✓] Word success: {pdf_path}")
+                return True
+            else:
+                logging.warning("[PDF✗] Word created no output")
+                return False
+                
         except Exception as e:
-            logging.warning(f"Microsoft Word conversion error: {e}")
+            logging.warning(f"[PDF✗] Word error: {e}")
             return False
 
     def _convert_to_pdf(self, docx_path: str, pdf_path: str):
