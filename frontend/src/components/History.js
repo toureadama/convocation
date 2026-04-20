@@ -172,6 +172,7 @@ const updateStatus = async (entryId, newStatus) => {
   };
 
   const approveConvocation = async (entryId) => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm('Êtes-vous sûr de vouloir approuver cette convocation ?')) return;
 
     try {
@@ -199,6 +200,7 @@ const updateStatus = async (entryId, newStatus) => {
   };
 
   const rejectConvocation = async (entryId) => {
+    // eslint-disable-next-line no-restricted-globals
     if (!confirm('Êtes-vous sûr de vouloir rejeter cette convocation ?')) return;
 
     try {
