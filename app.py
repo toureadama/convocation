@@ -1236,8 +1236,8 @@ def generate_convocation():
 
         logger.info(f"Executing command: {' '.join(cmd[:5])}... for user {user}")
 
-        # Execute generation
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd='.')
+        # Execute generation (increased timeout for Render)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=180, cwd='.')
 
         logger.info(f"Generation process returncode: {result.returncode}")
         logger.info(f"Generation stdout: {result.stdout}")

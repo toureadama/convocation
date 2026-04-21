@@ -257,3 +257,56 @@ INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
 2026-04-20 17:41:25 [INFO] History retrieval successful: 5 records
 2026-04-20 17:41:25 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
 2026-04-20 17:41:26 [INFO] History retrieval successful: 5 records
+2026-04-20 22:40:32 [INFO] [OK] MySQL database initialized successfully
+2026-04-20 22:40:33 [INFO] Starting server on port 5000 (production: False)
+2026-04-20 22:40:42 [INFO] [OK] MySQL database initialized successfully
+2026-04-20 22:40:43 [INFO] Starting server on port 5000 (production: False)
+2026-04-20 22:41:01 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-20 22:41:09 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-20 22:41:10 [INFO] History retrieval successful: 5 records
+2026-04-20 22:41:10 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-20 22:41:10 [INFO] History retrieval successful: 5 records
+2026-04-20 23:49:49 [INFO] [OK] MySQL database initialized successfully
+2026-04-20 23:49:49 [INFO] Starting server on port 5000 (production: False)
+2026-04-20 23:49:58 [INFO] [OK] MySQL database initialized successfully
+2026-04-20 23:49:59 [INFO] Starting server on port 5000 (production: False)
+2026-04-20 23:50:08 [INFO] User logged in: admin (Super Administrateur)
+2026-04-20 23:50:28 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-20 23:50:33 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-20 23:50:33 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-20 23:50:33 [INFO] History retrieval successful: 5 records
+2026-04-20 23:50:33 [INFO] History retrieval successful: 5 records
+2026-04-20 23:50:44 [INFO] User logged in: info (Administrateur Technique)
+2026-04-20 23:50:47 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-20 23:50:47 [INFO] History retrieval successful: 7 records
+2026-04-20 23:50:47 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-20 23:50:48 [INFO] History retrieval successful: 7 records
+2026-04-20 23:51:03 [INFO] History entry 62 deleted by info (Admin Technique)
+2026-04-21 00:39:31 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-21 00:39:34 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-21 00:39:34 [INFO] History retrieval successful: 4 records
+2026-04-21 00:39:34 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-21 00:39:35 [INFO] History retrieval successful: 4 records
+2026-04-21 00:40:16 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0005 --cc... for user 480442t
+2026-04-21 00:40:23 [INFO] [OK] MySQL database initialized successfully
+2026-04-21 00:40:24 [INFO] Starting server on port 5000 (production: False)
+2026-04-21 00:43:49 [INFO] [OK] MySQL database initialized successfully
+2026-04-21 00:43:49 [INFO] Starting server on port 5000 (production: False)
+2026-04-21 00:44:14 [INFO] [OK] MySQL database initialized successfully
+2026-04-21 00:44:14 [INFO] Starting server on port 5000 (production: False)
+2026-04-21 00:44:49 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-21 00:45:34 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0005 --cc... for user 480442t
+2026-04-21 00:47:24 [INFO] Generation process returncode: 0
+2026-04-21 00:47:24 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0005.pdf
+
+2026-04-21 00:47:24 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0005.docx \u2192 output\Convocation_TR_2026_0005.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+ERROR:root:[PDF\u2717] LibreOffice timeout (90s)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0005.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0005.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
+
+2026-04-21 00:47:24 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0005.pdf']
+2026-04-21 00:47:25 [INFO] PDF generated: 1 file(s) for user 480442t
+2026-04-21 00:48:18 [INFO] [OK] MySQL database initialized successfully
+2026-04-21 00:48:19 [INFO] Starting server on port 5000 (production: False)

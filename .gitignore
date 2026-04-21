@@ -11,9 +11,25 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+env/
+.env
+
+# Node
+node_modules/
+frontend/node_modules/
+build/
+
+# Archives
+*.tar.gz
+*.zip
+*.rpm
+*.deb
+
+# Logs
+*.log
 
 db_config.py
-.qwen/
+output/
 
 # Templates (NE PAS exclure - fichiers sources)
 # Convocation_modele.docx <- DOIT être commité

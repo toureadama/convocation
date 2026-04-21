@@ -28,10 +28,26 @@ FROM python:3.11-slim AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Dépendances système
+# Dépendances système pour LibreOffice
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxrandr2 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
+    libcairo-gobject2 \
+    libpango-1.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf2.0-0 \
+    libgtk-3-0 \
+    fonts-liberation \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copier LibreOffice depuis le stage précédent
@@ -48,13 +64,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py db_config.py convocation_mysql.py ./
 COPY Convocation_modele.docx .
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
-RUN mkdir -p output && chmod 755 output
+RUN mkdir -p output && chmod 755 output && \
+    # Vérifier que LibreOffice est installé
+    libreoffice --version || echo "Warning: LibreOffice not found"
 
-# LibreOffice PATH
-ENV PATH="/opt/libreoffice/LO-core:${PATH}"
+# LibreOffice PATH (Debian installation)
+ENV PATH="/usr/bin:/usr/lib/libreoffice:${PATH}"
 ENV HOME=/root
 ENV PYTHONUNBUFFERED=1
-ENV LO_PATH=/opt/libreoffice/LO-core/soffice
+ENV LO_PATH=/usr/bin/libreoffice
 
 # Healthcheck amélioré
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
