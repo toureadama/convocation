@@ -14,29 +14,21 @@ ARG REACT_APP_API_URL=https://convocation-douanesci.onrender.com
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 RUN npm run build
 
-# === STAGE 2: LibreOffice minimal (Ubuntu base, 250MB) ===
-FROM ubuntu:22.04 AS libreoffice-minimal
-ENV DEBIAN_FRONTEND=noninteractive
+# ─── Stage 1 ──────────────────────────────────────────────────────────────────
+FROM debian:bookworm-slim AS libreoffice-minimal
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates gnupg curl \
     libreoffice-writer \
     libreoffice-calc \
-    && \
-    # Node.js 20 LTS
-    wget -qO- https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# === STAGE 3: Python runtime (Alpine → 150MB total) ===
-FROM python:3.11-alpine AS runtime
-# Install minimal deps pour LibreOffice + fonts
-RUN apk add --no-cache \
-    libstdc++ fontconfig ttf-dejavu curl bash
 
-# Copy LibreOffice from previous stage
-COPY --from=libreoffice-minimal /opt/LO-core /opt/libreoffice/
+# ─── Stage 2 ──────────────────────────────────────────────────────────────────
+FROM debian:bookworm-slim AS runtime
+
+# ✅ Chemin garanti avec apt
+COPY --from=libreoffice-minimal /usr/lib/libreoffice /usr/lib/libreoffice
+COPY --from=libreoffice-minimal /usr/bin/libreoffice /usr/bin/libreoffice
 
 WORKDIR /app
 
