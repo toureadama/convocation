@@ -8,7 +8,8 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install --omit=dev
+COPY frontend/package-lock.json ./
+RUN npm ci --omit=dev
 COPY frontend/ ./
 ARG REACT_APP_API_URL=https://convocation-douanesci.onrender.com
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
@@ -80,5 +81,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 EXPOSE 5000
 # Gunicorn optimisé (worker-class=gevent pour I/O)
-CMD ["sh", "-c", "python -c 'from app import init_db; init_db()' && exec gunicorn --worker-class=gevent --workers=2 --worker-connections=1000 --bind=0.0.0.0:${PORT:-5000} --timeout=180 --access-logfile=- --error-logfile=- app:app"]
+CMD ["sh", "-c", "python -c 'from app import init_db; init_db()' || echo 'DB init failed, continuing...' && exec gunicorn --worker-class=gevent --workers=2 --worker-connections=1000 --bind=0.0.0.0:${PORT:-5000} --timeout=180 --access-logfile=- --error-logfile=- app:app"]
 
