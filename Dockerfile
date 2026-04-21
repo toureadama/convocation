@@ -17,14 +17,17 @@ RUN npm run build
 # === STAGE 2: LibreOffice minimal (Ubuntu base, 250MB) ===
 FROM ubuntu:22.04 AS libreoffice-minimal
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates gnupg software-properties-common && \
-    wget -qO- https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y curl && \
-    # LibreOffice 7.6 headless minimal (200MB)
-    wget -q https://github.com/LibreOffice/libreoffice/releases/download/7.6.7.2/LibreOffice_7.6.7.2_Linux_x86-64_rpm.tar.gz && \
-    tar -xzf *.tar.gz --strip-components=2 -C /opt LO-core && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* *.tar.gz
+    wget ca-certificates gnupg curl \
+    libreoffice-writer \
+    libreoffice-calc \
+    && \
+    # Node.js 20 LTS
+    wget -qO- https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # === STAGE 3: Python runtime (Alpine → 150MB total) ===
 FROM python:3.11-alpine AS runtime
