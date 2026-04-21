@@ -24,9 +24,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 # ─── Stage 2 ──────────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim AS runtime
+FROM python:3.11-slim AS runtime
 
-# ✅ Chemin garanti avec apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Dépendances système
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copier LibreOffice depuis le stage précédent
 COPY --from=libreoffice-minimal /usr/lib/libreoffice /usr/lib/libreoffice
 COPY --from=libreoffice-minimal /usr/bin/libreoffice /usr/bin/libreoffice
 
