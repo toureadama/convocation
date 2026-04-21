@@ -8,8 +8,8 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-COPY frontend/package-lock.json ./
-RUN npm ci --omit=dev
+# Use npm install instead of npm ci for better compatibility with Render
+RUN npm install --omit=dev --no-fund --no-audit
 COPY frontend/ ./
 ARG REACT_APP_API_URL=https://convocation-douanesci.onrender.com
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
