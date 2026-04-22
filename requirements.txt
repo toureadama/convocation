@@ -10,5 +10,5 @@ gunicorn==22.0.0
 gevent==24.2.1
 openpyxl==3.1.4
 python-dotenv==1.0.1
-pywin32==306; sys_platform == 'win32'
+# pywin32==306; sys_platform == 'win32'  # Disabled for Linux/Docker
 

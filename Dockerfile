@@ -16,40 +16,35 @@ ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 RUN npm run build
 
 # ─── Stage 1 ──────────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim AS libreoffice-minimal
+FROM ubuntu:22.04 AS libreoffice-minimal
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libreoffice-writer \
-    libreoffice-calc \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Full LibreOffice for DOCX→PDF (headless)
+RUN apt-get update -o Acquire::Retries=3 && \
+    apt-get install -y --no-install-recommends \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-base-core \
+        fonts-liberation \
+        && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && libreoffice --headless --version
 
 
 # ─── Stage 2 ──────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
+FROM ubuntu:22.04 AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Dépendances système pour LibreOffice
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    wget \
-    libfontconfig1 \
-    libfreetype6 \
-    libx11-6 \
-    libxext6 \
-    libxrender1 \
-    libxrandr2 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libgdk-pixbuf2.0-0 \
-    libcairo-gobject2 \
-    libpango-1.0-0 \
-    libatk1.0-0 \
-    libcairo2 \
-    libgdk-pixbuf2.0-0 \
-    libgtk-3-0 \
-    fonts-liberation \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Minimal deps for headless LibreOffice + retry logic for Render
+RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
+    (rm -rf /var/lib/apt/lists/* && apt-get update -o Acquire::Retries=3) && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        wget \
+        libfontconfig1 \
+        libfreetype6 \
+        fonts-liberation \
+        ca-certificates \
+        && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copier LibreOffice depuis le stage précédent
 COPY --from=libreoffice-minimal /usr/lib/libreoffice /usr/lib/libreoffice

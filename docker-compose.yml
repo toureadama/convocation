@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: douanesci_convocation
+      MYSQL_USER: douanes
+      MYSQL_PASSWORD: douanespass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migration_add_approval.py:/docker-entrypoint-initdb.d/01-migration.py  # Run migration on init
+
+  app:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: douanes
+      DB_PASSWORD: douanespass
+      DB_NAME: douanesci_convocation
+      JWT_SECRET_KEY: douanes-local-jwt-super-secure-2024-test
+      FLASK_ENV: development
+      PORT: 5000
+    depends_on:
+      - mysql
+    volumes:
+      - ./output:/app/output
+    # Windows Docker Desktop needs this for LibreOffice paths
+
+volumes:
+  mysql_data:
+
+# Usage:
+# docker-compose up --build  (first time)
+# docker-compose up          (subsequent)
+# docker-compose down -v     (cleanup DB)
+#
+# Test: curl http://localhost:5000/health
+# Login: POST /api/login {login:'admin', password:'admin123'}
+
