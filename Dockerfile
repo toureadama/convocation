@@ -34,7 +34,7 @@ FROM ubuntu:22.04 AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Minimal deps for headless LibreOffice + retry logic for Render
+# Minimal deps + Python3/pip for Flask (Ubuntu needs explicit)
 RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
     (rm -rf /var/lib/apt/lists/* && apt-get update -o Acquire::Retries=3) && \
     apt-get install -y --no-install-recommends \
@@ -44,6 +44,9 @@ RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
         libfreetype6 \
         fonts-liberation \
         ca-certificates \
+        python3 \
+        python3-pip \
+        python3-venv \
         && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copier LibreOffice depuis le stage précédent
@@ -54,7 +57,7 @@ WORKDIR /app
 
 # Python deps (cached layer)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # App files
 COPY app.py db_config.py convocation_mysql.py ./
@@ -76,5 +79,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 EXPOSE 5000
 # Gunicorn optimisé (worker-class=gevent pour I/O)
-CMD ["sh", "-c", "python -c 'from app import init_db; init_db()' || echo 'DB init failed, continuing...' && exec gunicorn --worker-class=gevent --workers=2 --worker-connections=1000 --bind=0.0.0.0:${PORT:-5000} --timeout=180 --access-logfile=- --error-logfile=- app:app"]
+CMD ["sh", "-c", "python3 -c 'from app import init_db; init_db()' || echo 'DB init failed, continuing...' && exec gunicorn --worker-class=gevent --workers=2 --worker-connections=1000 --bind=0.0.0.0:${PORT:-5000} --timeout=180 --access-logfile=- --error-logfile=- app:app"]
 
