@@ -17,12 +17,12 @@
 - [✅] **2. Update Dockerfile** (build-time verification, ENV LO_PATH/TMPDIR/FONTCONFIG)
 - [✅] **3. Update render.yaml** (remove runtime apt/shell, add env vars, PORT=10000)
 - [✅] **4. Local testing** (test_pdf_generation.py created w/ mocks)
-- [ ] **5. Deploy to Render**
-  - `git add . && git commit -m 'fix: robust PDF gen for Render' && git push`
-  - Monitor Render logs
-- [ ] **6. Production verification**
-  - Test /api/generate on live site
-  - Check no 500 errors
+- [✅] **5. Deploy to Render**
+  - ✅ Commit `39cfb610` pushed to main
+  - ⏳ Monitor Render logs (auto-deploy triggered)
+- [⏳] **6. Production verification**
+  - ⏳ Wait Render rebuild (~2-5 min), then test /api/generate
+  - ⏳ Check no 500 errors
 
 ### 🔧 Key Changes Summary
 ```

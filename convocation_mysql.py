@@ -107,7 +107,7 @@ class ConvocationGenerator:
         base_cmd = [
             soffice_exe, '--headless', '--norestore',
             '--convert-to', 'pdf:writer_pdf_Export',
-            '--outdir', output_dir, docx_path
+            '--outdir', str(output_dir), docx_path
         ]
 
         # On Linux (e.g., Render), use xvfb-run for headless display
