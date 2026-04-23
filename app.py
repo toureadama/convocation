@@ -1205,24 +1205,7 @@ def delete_code_operateur(code):
 @jwt_required()
 @limiter.limit("30 per hour")  # Prevent PDF generation spam
 @generate_access_required
-def generate_convocation():
-    try:
-        # ✅ Vérifier LibreOffice
-        lo_check = subprocess.run(
-            ['which', 'libreoffice'], 
-            capture_output=True, text=True
-        )
-        logger.info(f"LibreOffice path: {lo_check.stdout.strip() or 'NOT FOUND'}")
-
-        # ✅ Vérifier que convocation_mysql.py existe
-        script_path = os.path.join('.', 'convocation_mysql.py')
-        logger.info(f"Script exists: {os.path.exists(script_path)}")
-        logger.info(f"Working dir: {os.getcwd()}")
-        logger.info(f"Files in dir: {os.listdir('.')}")
-    except Exception as e:
-        logger.error(f"Pre-generation check error: {e}")
-        return jsonify({'error': 'Internal server error during pre-generation checks'}), 500
-    
+def generate_convocation():    
     """Generate convocation PDF."""
     required_fields = ['cc', 'code_imp', 'verificateur', 'num_declaration', 'date_declaration', 'type_dossier', 'fraude', 'signature_admin']
 

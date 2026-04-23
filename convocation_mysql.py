@@ -100,13 +100,19 @@ class ConvocationGenerator:
 
         # Enhanced conversion with timeout + cleanup
         output_dir = os.path.dirname(pdf_path) or '.'
-        cmd = [
+        base_cmd = [
             soffice_exe, '--headless', '--nocrash-report',
             '--convert-to', 'pdf:writer_pdf_Export',
             '--outdir', output_dir, docx_path
         ]
-        
-        env = {**os.environ, 
+
+        # On Linux (e.g., Render), use xvfb-run for headless display
+        if sys.platform.startswith('linux'):
+            cmd = ['xvfb-run', '-a'] + base_cmd
+        else:
+            cmd = base_cmd
+
+        env = {**os.environ,
                'HOME': os.path.expanduser('~'),
                'LD_LIBRARY_PATH': '/opt/libreoffice/program:$LD_LIBRARY_PATH'}
         

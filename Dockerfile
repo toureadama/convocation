@@ -38,6 +38,7 @@ RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
         python3 \
         python3-pip \
         python3-venv \
+        xvfb \
         && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copier LibreOffice depuis le stage précédent
