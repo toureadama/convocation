@@ -15,34 +15,28 @@ ARG REACT_APP_API_URL=https://convocation-douanesci.onrender.com
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 RUN npm run build
 
-# ─── Stage 1 ──────────────────────────────────────────────────────────────────
-FROM ubuntu:22.04 AS libreoffice-minimal
-RUN apt-get update && apt-get install -y software-properties-common && apt-get install -y libreoffice-writer libreoffice-calc fonts-liberation && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-# ─── Stage 2 ──────────────────────────────────────────────────────────────────
-FROM ubuntu:22.04 AS runtime
+# ─── Single Stage Build with LibreOffice ──────────────────────────────────
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Minimal deps + Python3/pip for Flask (Ubuntu needs explicit)
-RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
-    (rm -rf /var/lib/apt/lists/* && apt-get update -o Acquire::Retries=3) && \
+# Install all dependencies including LibreOffice and xvfb in one layer
+RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 && \
     apt-get install -y --no-install-recommends \
         curl \
         wget \
+        software-properties-common \
+        libreoffice-writer \
+        libreoffice-calc \
+        xvfb \
+        fonts-liberation \
         libfontconfig1 \
         libfreetype6 \
-        fonts-liberation \
         ca-certificates \
         python3 \
         python3-pip \
         python3-venv \
-        xvfb \
         && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copier LibreOffice depuis le stage précédent
-COPY --from=libreoffice-minimal /usr/bin /usr/bin
 
 WORKDIR /app
 
@@ -54,9 +48,12 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt
 COPY app.py db_config.py convocation_mysql.py ./
 COPY Convocation_modele.docx .
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
-RUN mkdir -p output && chmod 755 output && \
-    # Vérifier que LibreOffice est installé
-    libreoffice --version || echo "Warning: LibreOffice not found"
+
+# Create output directory with proper permissions and verify LibreOffice
+RUN mkdir -p /app/output && chmod 777 /app/output && \
+    echo "Verifying LibreOffice installation..." && \
+    libreoffice --version && \
+    echo "LibreOffice installed successfully" || (echo "ERROR: LibreOffice not found" && exit 1)
 
 # LibreOffice PATH (Debian installation)
 ENV PATH="/usr/bin:/usr/lib/libreoffice:${PATH}"
