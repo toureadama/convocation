@@ -2,11 +2,17 @@
 __pycache__/
 *.pyc
 *.pyo
+*.py[cod]
+*$py.class
 .venv/
 venv/
+env/
 
-# Frontend node_modules (will be installed in Docker)
+# Node (will be installed in Docker)
+node_modules/
 frontend/node_modules/
+frontend/package-lock.json
+frontend/build/
 
 # Git
 .git/
@@ -15,12 +21,20 @@ frontend/node_modules/
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Env files
 *.env
 secrets.env
+.env.*
+
+# Application
+output/
+*.log
 
 # Docs
 *.md
 DEPLOYMENT*
 README*
+TODO.md
