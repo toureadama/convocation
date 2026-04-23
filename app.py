@@ -1246,7 +1246,11 @@ def generate_convocation():
 
         if result.returncode != 0:
             logger.error(f"PDF generation failed: {result.stderr}")
-            return jsonify({'error': f'Generation failed: {result.stderr}'}), 500
+            logger.error(f"CMD ERROR: {result.stderr}")
+            return jsonify({
+                'error': 'Generation failed',
+                'details': result.stderr
+            }), 500
 
         # Parse output
         matches = re.findall(r'OK\s*:\s*([^\s\n\r]+)', result.stdout)
