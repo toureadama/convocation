@@ -101,7 +101,7 @@ class ConvocationGenerator:
         # Enhanced conversion with timeout + cleanup
         output_dir = os.path.dirname(pdf_path) or '.'
         base_cmd = [
-            soffice_exe, '--headless', '--nocrash-report',
+            soffice_exe, '--headless', '--norestore',
             '--convert-to', 'pdf:writer_pdf_Export',
             '--outdir', output_dir, docx_path
         ]

@@ -339,3 +339,46 @@ INFO:root:DOCX removed: output\Convocation_TR_2026_0006.docx
 
 2026-04-22 16:46:15 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0006.pdf']
 2026-04-22 16:46:17 [INFO] PDF generated: 1 file(s) for user 480442t
+2026-04-23 09:45:50 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 09:45:51 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 09:46:01 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 09:46:02 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 09:46:20 [INFO] User logged in: info (Administrateur Technique)
+2026-04-23 09:48:26 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-23 09:49:07 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0007 --cc... for user 480442t
+2026-04-23 09:49:17 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 09:49:18 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 10:00:06 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 10:00:07 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 10:01:48 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 10:01:49 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 10:02:11 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 10:02:12 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 10:17:59 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 10:18:00 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 10:53:59 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-23 10:55:27 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0007 --cc... for user 480442t
+2026-04-23 10:55:42 [INFO] Generation process returncode: 0
+2026-04-23 10:55:42 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0007.pdf
+
+2026-04-23 10:55:42 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0007.docx \u2192 output\Convocation_TR_2026_0007.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+WARNING:root:[PDF\u2717] LO failed (code 1): Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0007.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0007.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0007.docx
+
+2026-04-23 10:55:42 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0007.pdf']
+2026-04-23 10:55:44 [INFO] PDF generated: 1 file(s) for user 480442t
+2026-04-23 10:56:13 [INFO] User logged in: 398954D (Administrateur)
+2026-04-23 10:56:20 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-23 10:56:21 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-23 10:56:21 [INFO] History retrieval successful: 8 records
+2026-04-23 10:56:21 [INFO] History retrieval successful: 8 records
+2026-04-23 10:56:40 [INFO] Convocation 65 approved by COULIBALY KARIM
+2026-04-23 10:57:15 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-23 10:57:18 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 10:57:19 [INFO] History retrieval successful: 7 records
+2026-04-23 10:57:19 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 10:57:19 [INFO] History retrieval successful: 7 records
