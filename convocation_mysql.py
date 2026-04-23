@@ -98,8 +98,12 @@ class ConvocationGenerator:
             logging.warning("[PDF✗] LibreOffice NOT found - paths exhausted")
             return False
 
-        # Enhanced conversion with timeout + cleanup
-        output_dir = os.path.dirname(pdf_path) or '.'
+        # Enhanced conversion with Render-specific fixes
+        output_dir = os.path.dirname(pdf_path) or '/app/output'  # Render default
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+            logging.info(f"[PDF] Created output directory: {output_dir}")
+
         base_cmd = [
             soffice_exe, '--headless', '--norestore',
             '--convert-to', 'pdf:writer_pdf_Export',
@@ -108,29 +112,44 @@ class ConvocationGenerator:
 
         # On Linux (e.g., Render), use xvfb-run for headless display
         if sys.platform.startswith('linux'):
-            cmd = ['xvfb-run', '-a'] + base_cmd
+            # Check if xvfb is available
+            if shutil.which('xvfb-run'):
+                cmd = ['xvfb-run', '-a'] + base_cmd
+            else:
+                logging.warning("[PDF] xvfb-run not found, trying direct LibreOffice")
+                cmd = base_cmd
         else:
             cmd = base_cmd
 
+        # Environment variables for Linux/Render compatibility
         env = {**os.environ,
-               'HOME': os.path.expanduser('~'),
-               'LD_LIBRARY_PATH': '/opt/libreoffice/program:$LD_LIBRARY_PATH'}
+                'HOME': os.path.expanduser('~'),
+                'DISPLAY': ':1',  # For xvfb
+                'XAUTHORITY': os.path.expanduser('~/.Xauthority'),
+                'LD_LIBRARY_PATH': '/opt/libreoffice/program:$LD_LIBRARY_PATH'}
         
         try:
+            logging.info(f"[PDF] Executing command: {' '.join(cmd)}")
             result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=90,
+                cmd, capture_output=True, text=True, timeout=120,  # Increased timeout for Render
                 env=env, cwd=output_dir
             )
-            
+
+            logging.info(f"[PDF] Command exit code: {result.returncode}")
+            if result.stdout:
+                logging.debug(f"[PDF] stdout: {result.stdout[:200]}")
+            if result.stderr:
+                logging.debug(f"[PDF] stderr: {result.stderr[:200]}")
+
             if result.returncode == 0 and os.path.exists(pdf_path):
                 logging.info(f"[PDF✓] LibreOffice success: {pdf_path}")
                 return True
             else:
-                logging.warning(f"[PDF✗] LO failed (code {result.returncode}): {result.stderr[:200]}")
+                logging.warning(f"[PDF✗] LO failed (code {result.returncode}): {result.stderr[:300]}")
                 return False
-                
+
         except subprocess.TimeoutExpired:
-            logging.error("[PDF✗] LibreOffice timeout (90s)")
+            logging.error("[PDF✗] LibreOffice timeout (120s)")
             return False
         except Exception as e:
             logging.error(f"[PDF✗] LibreOffice error: {e}")

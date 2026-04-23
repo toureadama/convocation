@@ -35,4 +35,14 @@ services:
         value: "0"
       - key: PORT
         value: "5000"
-      # Fallback: Manual dashboard if sync fails
+      - key: LO_PATH
+        value: /usr/bin/libreoffice
+
+    # Force Bash execution to avoid PowerShell compatibility issues
+    shell: /bin/bash
+
+    # Install required dependencies at runtime
+    startCommand: |
+      mkdir -p /app/output && chmod 777 /app/output &&
+      apt-get update && apt-get install -y libreoffice xvfb &&
+      echo "Setup complete: LibreOffice and xvfb installed"
