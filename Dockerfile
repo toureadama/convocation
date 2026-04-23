@@ -17,16 +17,7 @@ RUN npm run build
 
 # ─── Stage 1 ──────────────────────────────────────────────────────────────────
 FROM ubuntu:22.04 AS libreoffice-minimal
-
-# Full LibreOffice for DOCX→PDF (headless)
-RUN apt-get update -o Acquire::Retries=3 && \
-    apt-get install -y --no-install-recommends \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-base-core \
-        fonts-liberation \
-        && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && libreoffice --headless --version
+RUN apt-get update && apt-get install -y libreoffice-headless fonts-liberation && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 # ─── Stage 2 ──────────────────────────────────────────────────────────────────
@@ -50,8 +41,7 @@ RUN apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=30 || \
         && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copier LibreOffice depuis le stage précédent
-COPY --from=libreoffice-minimal /usr/lib/libreoffice /usr/lib/libreoffice
-COPY --from=libreoffice-minimal /usr/bin/libreoffice /usr/bin/libreoffice
+COPY --from=libreoffice-minimal /usr/bin /usr/bin
 
 WORKDIR /app
 
