@@ -323,6 +323,19 @@ def init_db():
             )
             logger.info("[OK] Chrono user created: chrono/* (Chrono)")
 
+        # Create default Vérificateur user for testing
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='verif'")
+        if cursor.fetchone()['cnt'] == 0:
+            verif_password = os.getenv('VERIF_PASSWORD', 'verif123')
+            if verif_password == 'verif123' and os.getenv('FLASK_ENV') == 'production':
+                logger.warning("[WARNING] Using default verif password in production!")
+            password_hash = bcrypt.hashpw(verif_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute(
+                "INSERT INTO users (nom, prenom, grade, login, password_hash, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                ('Test', 'Verificateur', 'Vérificateur', 'verif', password_hash, 'Vérificateur', 'TEST VERIFICATEUR')
+            )
+            logger.info("[OK] Verificateur user created: verif/* (Vérificateur)")
+
         conn.commit()
         logger.info("[OK] MySQL database initialized successfully")
         return True
