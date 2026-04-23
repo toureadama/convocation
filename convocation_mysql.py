@@ -123,13 +123,19 @@ class ConvocationGenerator:
 
         # Environment variables for Linux/Render compatibility
         env = {**os.environ,
-                'HOME': os.path.expanduser('~'),
-                'DISPLAY': ':1',  # For xvfb
-                'XAUTHORITY': os.path.expanduser('~/.Xauthority'),
-                'LD_LIBRARY_PATH': '/opt/libreoffice/program:$LD_LIBRARY_PATH'}
+                'HOME': '/root',  # Explicit home for Render
+                'PATH': '/usr/bin:/usr/local/bin:/usr/sbin:/sbin:$PATH',
+                'LD_LIBRARY_PATH': '/usr/lib/libreoffice/program:$LD_LIBRARY_PATH'}
         
         try:
+            # Verify DOCX file exists before conversion
+            if not os.path.exists(docx_path):
+                logging.error(f"[PDF✗] DOCX file not found: {docx_path}")
+                return False
+
+            logging.info(f"[PDF] DOCX file exists: {docx_path}")
             logging.info(f"[PDF] Executing command: {' '.join(cmd)}")
+
             result = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=120,  # Increased timeout for Render
                 env=env, cwd=output_dir
@@ -137,15 +143,35 @@ class ConvocationGenerator:
 
             logging.info(f"[PDF] Command exit code: {result.returncode}")
             if result.stdout:
-                logging.debug(f"[PDF] stdout: {result.stdout[:200]}")
+                logging.info(f"[PDF] stdout: {result.stdout}")
             if result.stderr:
-                logging.debug(f"[PDF] stderr: {result.stderr[:200]}")
+                logging.warning(f"[PDF] stderr: {result.stderr}")
 
-            if result.returncode == 0 and os.path.exists(pdf_path):
-                logging.info(f"[PDF✓] LibreOffice success: {pdf_path}")
+            # Check if PDF was created regardless of exit code
+            if os.path.exists(pdf_path):
+                file_size = os.path.getsize(pdf_path)
+                logging.info(f"[PDF✓] LibreOffice success: {pdf_path} ({file_size} bytes)")
                 return True
             else:
-                logging.warning(f"[PDF✗] LO failed (code {result.returncode}): {result.stderr[:300]}")
+                # Try alternative conversion method if xvfb failed
+                if 'xvfb-run' in cmd and result.returncode != 0:
+                    logging.warning("[PDF] xvfb-run failed, trying direct LibreOffice...")
+                    cmd_no_xvfb = cmd[2:]  # Remove xvfb-run -a
+                    result_direct = subprocess.run(
+                        cmd_no_xvfb, capture_output=True, text=True, timeout=120,
+                        env=env, cwd=output_dir
+                    )
+                    logging.info(f"[PDF] Direct LO exit code: {result_direct.returncode}")
+                    if result_direct.stderr:
+                        logging.warning(f"[PDF] Direct stderr: {result_direct.stderr}")
+
+                    if os.path.exists(pdf_path):
+                        file_size = os.path.getsize(pdf_path)
+                        logging.info(f"[PDF✓] Direct LibreOffice success: {pdf_path} ({file_size} bytes)")
+                        return True
+
+                logging.error(f"[PDF✗] PDF not created: {pdf_path}")
+                logging.error(f"[PDF✗] LO command failed (code {result.returncode})")
                 return False
 
         except subprocess.TimeoutExpired:

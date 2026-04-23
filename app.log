@@ -382,3 +382,63 @@ INFO:root:DOCX removed: output\Convocation_TR_2026_0007.docx
 2026-04-23 10:57:19 [INFO] History retrieval successful: 7 records
 2026-04-23 10:57:19 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
 2026-04-23 10:57:19 [INFO] History retrieval successful: 7 records
+2026-04-23 12:27:55 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 12:27:55 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 12:28:05 [INFO] [OK] MySQL database initialized successfully
+2026-04-23 12:28:06 [INFO] Starting server on port 5000 (production: False)
+2026-04-23 12:28:13 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:28:14 [INFO] History retrieval successful: 7 records
+2026-04-23 12:28:14 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:28:14 [INFO] History retrieval successful: 7 records
+2026-04-23 12:28:25 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-23 12:28:28 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:28:28 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:28:28 [INFO] History retrieval successful: 7 records
+2026-04-23 12:28:29 [INFO] History retrieval successful: 7 records
+2026-04-23 12:29:14 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0008 --cc... for user 480442t
+2026-04-23 12:29:31 [INFO] Generation process returncode: 0
+2026-04-23 12:29:31 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0008.pdf
+
+2026-04-23 12:29:31 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0008.docx \u2192 output\Convocation_TR_2026_0008.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir output output\Convocation_TR_2026_0008.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF\u2717] LO failed (code 1): Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0008.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0008.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0008.docx
+
+2026-04-23 12:29:31 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0008.pdf']
+2026-04-23 12:29:33 [INFO] PDF generated: 1 file(s) for user 480442t
+2026-04-23 12:33:01 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0009 --cc... for user 480442t
+2026-04-23 12:33:19 [INFO] Generation process returncode: 0
+2026-04-23 12:33:19 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0009.pdf
+
+2026-04-23 12:33:19 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0009.docx \u2192 output\Convocation_TR_2026_0009.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir output output\Convocation_TR_2026_0009.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF\u2717] LO failed (code 1): Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0009.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0009.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0009.docx
+
+2026-04-23 12:33:19 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0009.pdf']
+2026-04-23 12:33:21 [INFO] PDF generated: 1 file(s) for user 480442t
+2026-04-23 12:33:47 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:33:47 [INFO] History retrieval successful: 9 records
+2026-04-23 12:33:47 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:33:47 [INFO] History retrieval successful: 9 records
+2026-04-23 12:34:21 [INFO] User logged in: 398954D (Administrateur)
+2026-04-23 12:34:24 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-23 12:34:24 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-23 12:34:24 [INFO] History retrieval successful: 10 records
+2026-04-23 12:34:25 [INFO] History retrieval successful: 10 records
+2026-04-23 12:34:53 [INFO] Convocation 67 approved by COULIBALY KARIM
+2026-04-23 12:35:18 [INFO] User logged in: 480442t (Vérificateur)
+2026-04-23 12:35:21 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:35:21 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
+2026-04-23 12:35:21 [INFO] History retrieval successful: 9 records
+2026-04-23 12:35:21 [INFO] History retrieval successful: 9 records

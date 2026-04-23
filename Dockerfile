@@ -52,10 +52,13 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 # Create output directory with proper permissions and verify LibreOffice
 RUN mkdir -p /app/output && chmod 777 /app/output && \
     echo "=== Verifying LibreOffice installation ===" && \
-    which libreoffice || echo "libreoffice not in PATH" && \
-    ls -la /usr/bin/libreoffice* || echo "libreoffice binaries not found" && \
-    timeout 10 libreoffice --version 2>&1 && \
-    echo "=== LibreOffice verified successfully ===" || (echo "=== ERROR: LibreOffice verification failed ===" && exit 1)
+    which libreoffice && \
+    ls -la /usr/bin/libreoffice* && \
+    echo "Testing LibreOffice basic functionality..." && \
+    timeout 10 libreoffice --version && \
+    echo "Testing xvfb-run..." && \
+    (xvfb-run -a echo "xvfb works" || echo "xvfb-run failed, will use direct LO") && \
+    echo "=== LibreOffice and dependencies verified successfully ==="
 
 # LibreOffice PATH (Debian installation)
 ENV PATH="/usr/bin:/usr/lib/libreoffice:${PATH}"
