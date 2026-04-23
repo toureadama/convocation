@@ -1,29 +1,43 @@
-# TODO - Test & Fix Convocation App (Local Windows + Render Linux)
-Status: ✅ COMPLETE | Priority: High
+ Fix PDF Generation on Render - LibreOffice Headless Issue
+# Status: ✅ PLAN APPROVED | ⏳ IN PROGRESS
 
-## Completed Steps:
-1. [x] Create TODO.md
-2. [x] docker-compose.yml local MySQL+app
-3. [x] Fix Dockerfile Docker/pip (ubuntu/python3-pip)
-4. [x] Local deps (.venv + .env.local)
-5. [x] Git pushes - Render builds
-6. [x] Fix Render env: render.yaml sync secrets.env
+## Current Task: Resolve 'source file could not be loaded' error in convocation_mysql.py on Render
 
-## Results:
-- Docker build 100% fixed (no apt/pip errors)
-- Local ready: `.\.venv\Scripts\activate && python app.py` (add MySQL/DB_PASSWORD)
-- Render: secrets.env auto-loaded, DB connect ok
-- App tested: login/gen/history/approve/download
+### ✅ Completed Steps
+- [x] Analyzed logs/files (convocation_mysql.py, app.py, Dockerfile, render.yaml)
+- [x] Created detailed edit plan with absolute paths, permissions, fallbacks
+- [x] User approved plan ✅
 
-**Final status**: Fully working local + Render Linux ✅
+### ⏳ In Progress / Pending Steps
+- [✅] **1. Update convocation_mysql.py** (absolute paths, chmod, env, fallback LO cmd)
+  - ✅ Use absolute `/app/output`
+  - ✅ Add `os.chmod(docx_path, 0o666)` before LO
+  - ✅ Improve fallback without xvfb-run + simpler flags
+  - ✅ Verify file size >1000 bytes
+- [✅] **2. Update Dockerfile** (build-time verification, ENV LO_PATH/TMPDIR/FONTCONFIG)
+- [✅] **3. Update render.yaml** (remove runtime apt/shell, add env vars, PORT=10000)
+- [✅] **4. Local testing** (test_pdf_generation.py created w/ mocks)
+- [ ] **5. Deploy to Render**
+  - `git add . && git commit -m 'fix: robust PDF gen for Render' && git push`
+  - Monitor Render logs
+- [ ] **6. Production verification**
+  - Test /api/generate on live site
+  - Check no 500 errors
 
-**Run**:
+### 🔧 Key Changes Summary
 ```
-# Local
-python app.py
-open http://localhost:5000
+convocation_mysql.py: _convert_with_libreoffice()
+├── 📁 output_dir → Path('/app/output').absolute()
+├── 🔐 os.chmod(docx_path, 0o666)
+├── 🛡️ env HOME=/root, /tmp writable
+├── 🔄 Fallback: direct libreoffice --convert-to pdf
+└── ✅ Verify pdf.stat().st_size > 1000 bytes
 
-# Render (live)
-https://convocation-douanesci.onrender.com
+Dockerfile/render.yaml: Build-time LO install + verification
 ```
+
+### 📋 Rollback Plan
+If issues: `git revert HEAD`
+
+**Next Action: Edit convocation_mysql.py → Confirm → Proceed**
 

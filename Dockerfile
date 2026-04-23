@@ -65,6 +65,9 @@ ENV PATH="/usr/bin:/usr/lib/libreoffice:${PATH}"
 ENV HOME=/root
 ENV PYTHONUNBUFFERED=1
 ENV LO_PATH=/usr/bin/libreoffice
+ENV TMPDIR=/tmp
+ENV FONTCONFIG_PATH=/etc/fonts
+ENV FONTCONFIG_FILE=/etc/fonts/fonts.conf
 
 # Healthcheck amélioré
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

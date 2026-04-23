@@ -99,10 +99,10 @@ class ConvocationGenerator:
             return False
 
         # Enhanced conversion with Render-specific fixes
-        output_dir = os.path.dirname(pdf_path) or '/app/output'  # Render default
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-            logging.info(f"[PDF] Created output directory: {output_dir}")
+        output_dir = Path('/app/output').absolute()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        pdf_filename = Path(pdf_path).name
+        logging.info(f"[PDF] Using absolute output_dir: {output_dir} | target: {pdf_filename}")
 
         base_cmd = [
             soffice_exe, '--headless', '--norestore',
@@ -121,11 +121,14 @@ class ConvocationGenerator:
         else:
             cmd = base_cmd
 
-        # Environment variables for Linux/Render compatibility
+        # Environment variables for Linux/Render compatibility + fonts
         env = {**os.environ,
-                'HOME': '/root',  # Explicit home for Render
+                'HOME': '/root',
+                'TMPDIR': '/tmp',
                 'PATH': '/usr/bin:/usr/local/bin:/usr/sbin:/sbin:$PATH',
-                'LD_LIBRARY_PATH': '/usr/lib/libreoffice/program:$LD_LIBRARY_PATH'}
+                'LD_LIBRARY_PATH': '/usr/lib/libreoffice/program:$LD_LIBRARY_PATH',
+                'FONTCONFIG_PATH': '/etc/fonts',
+                'FONTCONFIG_FILE': '/etc/fonts/fonts.conf'}
         
         try:
             # Verify DOCX file exists before conversion
@@ -134,11 +137,15 @@ class ConvocationGenerator:
                 return False
 
             logging.info(f"[PDF] DOCX file exists: {docx_path}")
+            # Fix permissions: make DOCX readable/executable
+            os.chmod(docx_path, 0o666)
+            os.makedirs('/tmp', mode=0o1777, exist_ok=True)
+
             logging.info(f"[PDF] Executing command: {' '.join(cmd)}")
 
             result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=120,  # Increased timeout for Render
-                env=env, cwd=output_dir
+                cmd, capture_output=True, text=True, timeout=180,  # Longer for Render
+                env=env, cwd=str(output_dir.parent)  # cwd=/app for relative paths
             )
 
             logging.info(f"[PDF] Command exit code: {result.returncode}")
@@ -156,18 +163,23 @@ class ConvocationGenerator:
                 # Try alternative conversion method if xvfb failed
                 if 'xvfb-run' in cmd and result.returncode != 0:
                     logging.warning("[PDF] xvfb-run failed, trying direct LibreOffice...")
-                    cmd_no_xvfb = cmd[2:]  # Remove xvfb-run -a
+                    # Alternative cmd with simpler flags
+                    cmd_direct = [
+                        soffice_exe, '--headless', '--norestore', 
+                        '--convert-to', 'pdf',
+                        '--outdir', str(output_dir),
+                        docx_path
+                    ]
                     result_direct = subprocess.run(
-                        cmd_no_xvfb, capture_output=True, text=True, timeout=120,
-                        env=env, cwd=output_dir
+                        cmd_direct, capture_output=True, text=True, timeout=180,
+                        env=env, cwd=str(output_dir.parent)
                     )
                     logging.info(f"[PDF] Direct LO exit code: {result_direct.returncode}")
                     if result_direct.stderr:
                         logging.warning(f"[PDF] Direct stderr: {result_direct.stderr}")
 
-                    if os.path.exists(pdf_path):
-                        file_size = os.path.getsize(pdf_path)
-                        logging.info(f"[PDF✓] Direct LibreOffice success: {pdf_path} ({file_size} bytes)")
+                    if Path(pdf_path).exists() and Path(pdf_path).stat().st_size > 1000:
+                        logging.info(f"[PDF✓] Direct LibreOffice success: {pdf_path}")
                         return True
 
                 logging.error(f"[PDF✗] PDF not created: {pdf_path}")

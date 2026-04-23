@@ -34,15 +34,19 @@ services:
       - key: FLASK_DEBUG
         value: "0"
       - key: PORT
-        value: "5000"
+        value: "10000"
       - key: LO_PATH
         value: /usr/bin/libreoffice
+      - key: TMPDIR
+        value: /tmp
+      - key: FONTCONFIG_PATH
+        value: /etc/fonts
+      - key: FONTCONFIG_FILE
+        value: /etc/fonts/fonts.conf
 
-    # Force Bash execution to avoid PowerShell compatibility issues
-    shell: /bin/bash
+    # Bash handled by Docker CMD
 
     # Install required dependencies at runtime
     startCommand: |
       mkdir -p /app/output && chmod 777 /app/output &&
-      apt-get update && apt-get install -y libreoffice xvfb &&
-      echo "Setup complete: LibreOffice and xvfb installed"
+      echo "Output dir ready. LibreOffice from Dockerfile."
