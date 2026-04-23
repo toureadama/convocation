@@ -17,7 +17,7 @@ RUN npm run build
 
 # ─── Stage 1 ──────────────────────────────────────────────────────────────────
 FROM ubuntu:22.04 AS libreoffice-minimal
-RUN apt-get update && apt-get install -y libreoffice-headless fonts-liberation && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y software-properties-common && apt-get install -y libreoffice-writer libreoffice-calc fonts-liberation && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 # ─── Stage 2 ──────────────────────────────────────────────────────────────────
