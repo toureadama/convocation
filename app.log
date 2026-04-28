@@ -442,3 +442,108 @@ INFO:root:DOCX removed: output\Convocation_TR_2026_0009.docx
 2026-04-23 12:35:21 [INFO] Executing history query for user: 480442t, page: 0, limit: 10
 2026-04-23 12:35:21 [INFO] History retrieval successful: 9 records
 2026-04-23 12:35:21 [INFO] History retrieval successful: 9 records
+2026-04-28 20:42:07 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:42:09 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:42:23 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:42:24 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:46:29 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:46:30 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:54:17 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:54:18 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:54:44 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:54:46 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:58:01 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:58:02 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:58:20 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 20:58:22 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 20:58:31 [INFO] User logged in: admin (Super Administrateur)
+2026-04-28 20:58:41 [INFO] Executing history query for user: admin, page: 0, limit: 10
+2026-04-28 20:58:41 [INFO] History retrieval successful: 9 records
+2026-04-28 20:58:42 [INFO] Executing history query for user: admin, page: 0, limit: 10
+2026-04-28 20:58:42 [INFO] History retrieval successful: 9 records
+2026-04-28 21:20:19 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 21:20:20 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 21:20:35 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 21:20:37 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 21:20:42 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:20:52 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:20:52 [INFO] History retrieval successful: 9 records
+2026-04-28 21:20:53 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:20:53 [INFO] History retrieval successful: 9 records
+2026-04-28 21:24:45 [WARNING] Failed login attempt for: info²info123
+2026-04-28 21:25:03 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:37:29 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:39:19 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:52:57 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:52:57 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:52:57 [INFO] History retrieval successful: 9 records
+2026-04-28 21:52:57 [INFO] History retrieval successful: 9 records
+2026-04-28 21:53:31 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:53:35 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:53:35 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 21:53:36 [INFO] History retrieval successful: 9 records
+2026-04-28 21:53:36 [INFO] History retrieval successful: 9 records
+2026-04-28 21:54:23 [WARNING] Failed login attempt for: verif
+2026-04-28 21:54:36 [WARNING] Failed login attempt for: verif
+2026-04-28 21:54:52 [WARNING] Failed login attempt for: Test
+2026-04-28 21:55:08 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 21:55:53 [INFO] User logged in: 932913B (Vérificateur)
+2026-04-28 22:01:43 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 22:01:44 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 22:03:16 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 22:03:17 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 22:03:38 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 22:03:39 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 22:05:27 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 22:05:51 [INFO] User logged in: 824373Z (Vérificateur)
+2026-04-28 22:10:42 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 22:10:43 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 22:10:55 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 22:10:56 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 22:15:17 [INFO] User logged in: 824373Z (Vérificateur)
+2026-04-28 22:36:12 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 22:36:18 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 22:36:18 [INFO] History retrieval successful: 9 records
+2026-04-28 22:36:18 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 22:36:19 [INFO] History retrieval successful: 9 records
+2026-04-28 22:37:14 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 22:37:14 [INFO] History retrieval successful: 9 records
+2026-04-28 22:37:15 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 22:37:15 [INFO] History retrieval successful: 9 records
+2026-04-28 22:37:56 [INFO] User logged in: 480442T (Vérificateur)
+2026-04-28 22:38:04 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-28 22:38:04 [INFO] History retrieval successful: 4 records
+2026-04-28 22:38:04 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-28 22:38:05 [INFO] History retrieval successful: 4 records
+2026-04-28 22:38:50 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0005 --cc... for user 480442T
+2026-04-28 22:39:25 [INFO] Generation process returncode: 0
+2026-04-28 22:39:25 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0005.pdf
+
+2026-04-28 22:39:25 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0005.docx \u2192 output\Convocation_TR_2026_0005.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0005.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0005.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0005.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0005.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
+
+2026-04-28 22:39:25 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0005.pdf']
+2026-04-28 22:39:27 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-04-28 22:39:46 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 22:40:16 [INFO] User logged in: 398954D (Administrateur)
+2026-04-28 22:40:22 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-28 22:40:23 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-28 22:40:23 [INFO] History retrieval successful: 10 records
+2026-04-28 22:40:23 [INFO] History retrieval successful: 10 records
+2026-04-28 22:41:04 [INFO] Convocation 82 approved by COULIBALY KARIM
+2026-04-28 22:41:46 [INFO] User logged in: 480442T (Vérificateur)
+2026-04-28 22:41:55 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-28 22:41:55 [INFO] History retrieval successful: 5 records
+2026-04-28 22:41:56 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-28 22:41:56 [INFO] History retrieval successful: 5 records

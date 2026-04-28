@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiFetch, handleResponse } from '../api';
 import './CodeAgre.css';
 
@@ -9,12 +9,55 @@ const CodeAgre = () => {
   const [newCC, setNewCC] = useState('');
   const [newSociete, setNewSociete] = useState('');
   const [editingCC, setEditingCC] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const debounceRef = useRef(null);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      // Debounced search logic would go here if needed
+    }, 300);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const fetchCompanies = useCallback(async () => {
+    setLoading(true);
+    setError('');
+
+    // Check cache first
+    const cached = localStorage.getItem('code_agree_cache');
+    if (cached) {
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+          setCompanies(data);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('Cache read error:', e);
+      }
+    }
+
     try {
       const response = await apiFetch('/api/code_agree');
       const data = await handleResponse(response);
-      setCompanies(data.companies || []);
+      const companiesData = data.companies || [];
+      setCompanies(companiesData);
+
+      // Cache the data
+      localStorage.setItem('code_agree_cache', JSON.stringify({
+        data: companiesData,
+        timestamp: Date.now()
+      }));
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         setError('Session expirée. Veuillez vous reconnecter.');
@@ -29,6 +72,18 @@ const CodeAgre = () => {
   useEffect(() => {
     fetchCompanies();
   }, [fetchCompanies]);
+
+  // Filter companies based on search query (optimized)
+  const filteredCompanies = useMemo(() => {
+    if (!searchQuery.trim()) return companies;
+    const query = searchQuery.toLowerCase().trim();
+    if (query.length < 2) return companies; // Don't filter for very short queries
+
+    return companies.filter(company =>
+      company.cc.toLowerCase().includes(query) ||
+      company.societe.toLowerCase().includes(query)
+    );
+  }, [companies, searchQuery]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -47,7 +102,8 @@ const CodeAgre = () => {
       await handleResponse(response);
       setNewCC('');
       setNewSociete('');
-      fetchCompanies();
+      setIsAdding(false);
+      await fetchCompanies();
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         alert('⚠️ Session expirée. Veuillez vous reconnecter.');
@@ -98,12 +154,31 @@ const CodeAgre = () => {
   return (
     <div className="code-agre-container">
       <header className="code-agre-header">
-        <h2>Gestion des Codes Agréés</h2>
+        <h2>📋 Gestion des Codes Agréés</h2>
+        <button className="btn-add" onClick={() => setIsAdding(!isAdding)}>
+          {isAdding ? '✕ Annuler' : '➕ Ajouter un code agréé'}
+        </button>
       </header>
 
       {error && <div className="error" role="alert">{error}</div>}
 
-      <form onSubmit={handleAdd} className="add-form">
+      {/* Stats Banner */}
+      <div className="stats-banner">
+        <div>
+          <div className="stat-number">{companies.length}</div>
+          <div className="stat-label">Code(s) Agréé(s) enregistré(s)</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="stat-number">
+            {searchQuery ? filteredCompanies.length : companies.length}
+          </div>
+          <div className="stat-label">Affiché(s)</div>
+        </div>
+      </div>
+
+      {/* Add Form */}
+      {isAdding && (
+        <form onSubmit={handleAdd} className="add-form">
         <h3>Ajouter un code agréé</h3>
         <div className="form-grid">
           <div className="form-group">
@@ -133,9 +208,38 @@ const CodeAgre = () => {
           </button>
         </div>
       </form>
+      )}
 
-      {companies.length === 0 ? (
-        <p className="no-data">Aucun code agréé enregistré.</p>
+      {/* Toolbar with Search */}
+      {companies.length > 0 && (
+        <div className="toolbar">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 Rechercher un code ou une société..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button className="btn-refresh" onClick={() => fetchCompanies()}>
+            🔄 Rafraîchir
+          </button>
+        </div>
+      )}
+
+      {filteredCompanies.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📦</div>
+          <div className="empty-state-text">
+            {searchQuery
+              ? 'Aucun résultat pour cette recherche.'
+              : 'Aucun code agréé enregistré.'}
+          </div>
+          {!searchQuery && (
+            <div className="empty-state-subtext">
+              Cliquez sur "Ajouter un code agréé" pour commencer.
+            </div>
+          )}
+        </div>
       ) : (
         <div className="table-container">
           <table className="companies-table">
@@ -147,7 +251,7 @@ const CodeAgre = () => {
               </tr>
             </thead>
             <tbody>
-              {companies.map((company) => (
+              {filteredCompanies.map((company) => (
                 <tr key={company.cc}>
                   <td><code>{company.cc}</code></td>
                   <td>
@@ -184,19 +288,37 @@ const CodeAgre = () => {
                     )}
                   </td>
                   <td>
-                    <button
-                      onClick={() => handleDelete(company.cc)}
-                      className="delete-btn"
-                      title="Supprimer"
-                    >
-                      🗑️
-                    </button>
+                    <div className="actions-cell">
+                      <button
+                        className="btn-icon edit"
+                        onClick={() => setEditingCC(company.cc)}
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(company.cc)}
+                        className="delete-btn"
+                        title="Supprimer"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="table-footer">{companies.length} code(s) agré(s) enregistré(s)</p>
+
+          {/* Table Footer */}
+          <div className="table-footer">
+            <span className="record-count">
+              {filteredCompanies.length} sur {companies.length} code(s) agréé(s)
+            </span>
+            <span style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+              💡 Astuce: Cliquez sur une société pour la modifier
+            </span>
+          </div>
         </div>
       )}
 

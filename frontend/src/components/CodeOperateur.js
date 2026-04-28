@@ -17,10 +17,33 @@ const CodeOperateur = () => {
   const fetchOperateurs = useCallback(async () => {
     setLoading(true);
     setError('');
+
+    // Check cache first
+    const cached = localStorage.getItem('code_operateur_cache');
+    if (cached) {
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+          setOperateurs(data);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('Cache read error:', e);
+      }
+    }
+
     try {
       const response = await apiFetch('/api/code_operateur');
       const data = await handleResponse(response);
-      setOperateurs(data.operateurs || []);
+      const operateursData = data.operateurs || [];
+      setOperateurs(operateursData);
+
+      // Cache the data
+      localStorage.setItem('code_operateur_cache', JSON.stringify({
+        data: operateursData,
+        timestamp: Date.now()
+      }));
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         setError('Session expirée. Veuillez vous reconnecter.');
@@ -36,14 +59,15 @@ const CodeOperateur = () => {
     fetchOperateurs();
   }, [fetchOperateurs]);
 
-  // Filter operateurs based on search query
+  // Filter operateurs based on search query (optimized)
   const filteredOperateurs = useMemo(() => {
     if (!searchQuery.trim()) return operateurs;
-    const query = searchQuery.toLowerCase();
-    return operateurs.filter(
-      op =>
-        op.code_operateur.toLowerCase().includes(query) ||
-        op.nom_operateur.toLowerCase().includes(query)
+    const query = searchQuery.toLowerCase().trim();
+    if (query.length < 2) return operateurs; // Don't filter for very short queries
+
+    return operateurs.filter(op =>
+      op.code_operateur.toLowerCase().includes(query) ||
+      op.nom_operateur.toLowerCase().includes(query)
     );
   }, [operateurs, searchQuery]);
 
@@ -81,7 +105,7 @@ const CodeOperateur = () => {
 
   // Start inline editing
   const startEdit = (operateur) => {
-    setEditingId(operateur.id);
+    setEditingId(operateur.code_operateur);
     setEditValue(operateur.nom_operateur);
   };
 
@@ -265,12 +289,12 @@ const CodeOperateur = () => {
             </thead>
             <tbody>
               {filteredOperateurs.map((operateur) => (
-                <tr key={operateur.id}>
+                <tr key={operateur.code_operateur}>
                   <td>
                     <span className="code-badge">{operateur.code_operateur}</span>
                   </td>
-                  <td>
-                    {editingId === operateur.id ? (
+                   <td>
+                     {editingId === operateur.code_operateur ? (
                       <div className="inline-edit">
                         <input
                           type="text"

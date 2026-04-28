@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '../api';
 import './Form.css';
 
@@ -6,7 +6,9 @@ const FRAUDE_OPTIONS = [
   { value: 'FDE', label: 'FAUSSE DECLARATION ESPECES' },
   { value: 'FDV', label: 'FAUSSE DECLARATION VALEURS' },
   { value: 'ESP', label: 'ENLEVEMENT SANS PERMIS' },
-  { value: 'EXC', label: 'EXCEDENT' }
+  { value: 'EXC', label: 'EXCEDENT' },
+  { value: 'PE', label: 'PRÉLÈVEMENT D\'ÉCHANTILLONS' },
+  { value: 'RV', label: 'RETARD DE VISITE' }
 ];
 
 const ADMIN_SIGNATURES = [
@@ -16,8 +18,39 @@ const ADMIN_SIGNATURES = [
 
 const DOSSIER_TYPES = [
   { value: 'BDAP', label: 'BDAP' },
-  { value: 'DARRV', label: 'DARRV' }
+  { value: 'DARRV', label: 'DARRV' },
+  { value: 'BADARRV', label: 'BULLETIN ALERTE DARRV' }
 ];
+
+// Simple cache utility
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCachedData = (key) => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        return data;
+      }
+      localStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn('Cache read error:', e);
+  }
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.warn('Cache write error:', e);
+  }
+};
 
 const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGenerated = false }) => {
   const [formData, setFormData] = useState({
@@ -49,68 +82,70 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
     }
   }, [currentUser]);
 
-  // Load companies list
+  // Load companies and operateurs lists with cache
   useEffect(() => {
-    const loadCompanies = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsLoadingCompanies(false);
-          return;
-        }
-
-        const response = await apiFetch('/api/companies');
-
-        if (!response.ok) {
-          throw new Error(`Erreur chargement codes agréés: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setCompanies(data.companies || []);
-      } catch (err) {
-        if (err.message === 'SESSION_EXPIRED') {
-          window.location.reload();
-          return;
-        }
-        console.error('Companies load error:', err);
-      } finally {
+    const loadData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
         setIsLoadingCompanies(false);
-      }
-    };
-
-    loadCompanies();
-  }, []);
-
-  // Load operateurs list
-  useEffect(() => {
-    const loadOperateurs = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsLoadingOperateurs(false);
-          return;
-        }
-
-        const response = await apiFetch('/api/operateurs');
-
-        if (!response.ok) {
-          throw new Error(`Erreur chargement opérateurs: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setOperateurs(data.operateurs || []);
-      } catch (err) {
-        if (err.message === 'SESSION_EXPIRED') {
-          window.location.reload();
-          return;
-        }
-        console.error('Operateurs load error:', err);
-      } finally {
         setIsLoadingOperateurs(false);
+        return;
+      }
+
+      // Load companies
+      const cachedCompanies = getCachedData('companies');
+      if (cachedCompanies) {
+        setCompanies(cachedCompanies);
+        setIsLoadingCompanies(false);
+      } else {
+        try {
+          const response = await apiFetch('/api/companies');
+          if (!response.ok) {
+            throw new Error(`Erreur chargement codes agréés: ${response.status}`);
+          }
+          const data = await response.json();
+          const companiesData = data.companies || [];
+          setCompanies(companiesData);
+          setCachedData('companies', companiesData);
+        } catch (err) {
+          if (err.message === 'SESSION_EXPIRED') {
+            window.location.reload();
+            return;
+          }
+          console.error('Companies load error:', err);
+        } finally {
+          setIsLoadingCompanies(false);
+        }
+      }
+
+      // Load operateurs
+      const cachedOperateurs = getCachedData('operateurs');
+      if (cachedOperateurs) {
+        setOperateurs(cachedOperateurs);
+        setIsLoadingOperateurs(false);
+      } else {
+        try {
+          const response = await apiFetch('/api/operateurs');
+          if (!response.ok) {
+            throw new Error(`Erreur chargement opérateurs: ${response.status}`);
+          }
+          const data = await response.json();
+          const operateursData = data.operateurs || [];
+          setOperateurs(operateursData);
+          setCachedData('operateurs', operateursData);
+        } catch (err) {
+          if (err.message === 'SESSION_EXPIRED') {
+            window.location.reload();
+            return;
+          }
+          console.error('Operateurs load error:', err);
+        } finally {
+          setIsLoadingOperateurs(false);
+        }
       }
     };
 
-    loadOperateurs();
+    loadData();
   }, []);
 
   const handleChange = useCallback((e) => {
@@ -122,12 +157,20 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
       const company = companies.find(c => c.cc === value);
       setSelectedCompany(company ? company.societe : '');
     }
-    
+
     if (name === 'code_imp') {
       const operateur = operateurs.find(o => o.code_operateur === value);
       setSelectedOperateur(operateur ? operateur.nom_operateur : '');
     }
   }, [companies, operateurs]);
+
+  // Memoize expensive computations
+  const isFormValid = useMemo(() =>
+    formData.cc && formData.code_imp && formData.verificateur &&
+    formData.num_declaration && formData.date_declaration &&
+    formData.type_dossier && formData.fraude && formData.signature_admin,
+    [formData]
+  );
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
@@ -160,9 +203,7 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
     }
   }, [successfullyGenerated, loading, resetForm]);
 
-  const isFormValid = formData.cc && formData.code_imp && formData.verificateur &&
-                      formData.num_declaration && formData.date_declaration &&
-                      formData.type_dossier && formData.fraude && formData.signature_admin;
+
 
   return (
     <form onSubmit={handleSubmit} className="form-container">

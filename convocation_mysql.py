@@ -318,9 +318,11 @@ class ConvocationGenerator:
         annee = pd.Timestamp.now().strftime('%Y')
         FRAUDE_MAP = {
             'FDE': 'FAUSSE DECLARATION ESPECE',
-            'FDV': 'FAUSSE DECLARATION VALEUR', 
+            'FDV': 'FAUSSE DECLARATION VALEUR',
             'ESP': 'ENLEVEMENT SANS PERMIS',
-            'EXC': 'EXCEDENT'
+            'EXC': 'EXCEDENT',
+            'PE': 'PRÉLÈVEMENT D\'ÉCHANTILLONS',
+            'RV': 'RETARD DE VISITE'
         }
         
         fraude_libelle = FRAUDE_MAP.get(fraude.upper(), fraude)
@@ -378,7 +380,7 @@ def main():
     parser.add_argument('--cc', required=True, help='N° Code Déclarant')
     parser.add_argument('--code_imp', required=True, help='N° Code Opérateur')
     parser.add_argument('--verificateur', required=True)
-    parser.add_argument('--type_dossier', required=True, help='Type de dossier (BDAP/DARRV)')
+    parser.add_argument('--type_dossier', required=True, help='Type de dossier (BDAP/DARRV/BADARRV)')
     parser.add_argument('--num_declaration', required=True)
     parser.add_argument('--date_declaration', required=True)
     parser.add_argument('--fraude', required=True)
