@@ -146,6 +146,37 @@ function App() {
     }
   };
 
+  const handleSubmit = async (formData) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const params = new URLSearchParams(formData);
+      const response = await apiFetch('/api/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur serveur: ${response.status}`);
+      }
+
+      const data = await response.json();
+      alert(data.message || 'Convocation soumise pour approbation');
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        window.location.reload();
+        return;
+      }
+      setError(err.message || 'Erreur lors de la soumission');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const userRole = user?.role || user?.grade;
   const isSuperAdmin = userRole === ROLES.SUPER_ADMIN;
   const isAdminTechnique = userRole === ROLES.ADMIN_TECHNIQUE;
@@ -226,10 +257,12 @@ function App() {
             <>
               <Form
                 onGenerate={handleGenerate}
+                onSubmit={handleSubmit}
                 loading={loading}
                 progress={progress}
                 currentUser={user}
                 successfullyGenerated={results.length > 0}
+                userRole={userRole}
 
               />
               {error && <div className="error">{error}</div>}

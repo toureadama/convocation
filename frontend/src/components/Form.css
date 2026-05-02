@@ -71,6 +71,34 @@
   cursor: not-allowed;
 }
 
+.button-group {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.submit-btn {
+  background: #2196F3;
+  color: white;
+  padding: 15px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex: 1;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1976D2;
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 .reset-btn {
   margin-left: 10px;
   background: #ff6b6b;

@@ -29,6 +29,9 @@ services:
       JWT_SECRET_KEY: douanes-local-jwt-super-secure-2024-test
       FLASK_ENV: development
       PORT: 5000
+      CLOUDINARY_CLOUD_NAME: dkohn8rjb
+      CLOUDINARY_API_KEY: 627145979542462
+      CLOUDINARY_API_SECRET: sgRydI4-BQDXZIcd9u9o7IVNC7w
     depends_on:
       - mysql
     volumes:

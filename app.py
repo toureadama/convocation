@@ -182,7 +182,7 @@ def admin_required(f):
 technical_admin_required = admin_required
 
 def generate_access_required(f):
-    """Decorator pour génération PDF: Vérificateur + Chrono."""
+    """Decorator pour génération PDF: Vérificateur seulement."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         current_user = get_jwt_identity()
@@ -192,8 +192,8 @@ def generate_access_required(f):
                 user_row = cursor.fetchone()
                 user_role = user_row['role'] if user_row else 'Vérificateur'
 
-                if user_role not in ['Vérificateur', 'Chrono']:
-                    return jsonify({'error': 'Accès refusé. Seuls Vérificateur et Chrono peuvent générer.'}), 403
+                if user_role != 'Vérificateur':
+                    return jsonify({'error': 'Accès refusé. Seuls les Vérificateurs peuvent générer.'}), 403
         except Exception as e:
             logger.error(f"Generate access check failed: {e}")
             return jsonify({'error': 'Accès refusé'}), 403
@@ -269,6 +269,13 @@ def init_db():
             nom_operateur VARCHAR(255) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
 
+        cursor.execute('''CREATE TABLE IF NOT EXISTS settings (
+            key_name VARCHAR(50) PRIMARY KEY,
+            value VARCHAR(255),
+            modified_by VARCHAR(50),
+            modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci''')
+
         # Migration: Add numero_chrono column if it doesn't exist
         try:
             cursor.execute('''ALTER TABLE history ADD COLUMN numero_chrono VARCHAR(100)''')
@@ -309,21 +316,7 @@ def init_db():
             )
             logger.info("[OK] Admin Technique created: info/* (Administrateur Technique)")
 
-        # Create default Chrono user
-        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='chrono'")
-        if cursor.fetchone()['cnt'] == 0:
-            chrono_password = os.getenv('CHRONO_PASSWORD', 'chrono123')
-            if chrono_password == 'chrono123' and os.getenv('FLASK_ENV') == 'production':
-                raise RuntimeError(
-                    "[CRITICAL] Cannot use default chrono password in production!\n"
-                    "Set CHRONO_PASSWORD in your Render environment variables."
-                )
-            password_hash = bcrypt.hashpw(chrono_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            cursor.execute(
-                "INSERT INTO users (nom, prenom, grade, login, password_hash, role, signature_name) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                ('Chrono', 'Service', 'Chrono', 'chrono', password_hash, 'Chrono', 'CHRONO SERVICE')
-            )
-            logger.info("[OK] Chrono user created: chrono/* (Chrono)")
+
 
         # Create default Vérificateur user for testing
         cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE login='verif'")
@@ -337,6 +330,15 @@ def init_db():
                 ('Test', 'Verificateur', 'Vérificateur', 'verif', password_hash, 'Vérificateur', 'TEST VERIFICATEUR')
             )
             logger.info("[OK] Verificateur user created: verif/* (Vérificateur)")
+
+        # Insert default chrono_initial setting
+        cursor.execute("SELECT COUNT(*) as cnt FROM settings WHERE key_name='chrono_initial'")
+        if cursor.fetchone()['cnt'] == 0:
+            cursor.execute(
+                "INSERT INTO settings (key_name, value, modified_by) VALUES (%s, %s, %s)",
+                ('chrono_initial', '1', 'system')
+            )
+            logger.info("[OK] Default chrono_initial setting created: 1")
 
         conn.commit()
         logger.info("[OK] MySQL database initialized successfully")
@@ -444,7 +446,7 @@ def build_history_query(current_user, filters, include_pagination=True):
         user_signature = None
 
     # Role-based filtering
-    if user_role in ('Super Administrateur', 'Administrateur Technique', 'Chrono'):
+    if user_role in ('Super Administrateur', 'Administrateur Technique'):
         # Full access roles see ALL entries
         pass
     elif user_role == 'Administrateur':
@@ -467,6 +469,7 @@ def build_history_query(current_user, filters, include_pagination=True):
             ('admin', 'h.signature_admin', 'LIKE'),
             ('statut', 'h.statut', '='),
             ('statut_approbation', 'h.statut_approbation', '='),
+            ('num_declaration', 'h.num_declaration', 'LIKE'),
         ]
 
         for key, col, op in filter_map:
@@ -584,9 +587,9 @@ def update_history_fields(entry_id):
             user_row = cursor.fetchone()
             user_role = user_row['role'] if user_row else 'Vérificateur'
             
-            # Only owner can update, or Administrateur/Administrateur Technique/Chrono for specific fields
+            # Only owner can update, or Administrateur/Administrateur Technique for specific fields
             is_owner = entry['user_login'] == current_user
-            can_update_all = user_role in ['Administrateur', 'Administrateur Technique', 'Chrono']
+            can_update_all = user_role in ['Administrateur', 'Administrateur Technique']
             
             if not (is_owner or can_update_all):
                 return jsonify({'error': 'Access denied. You can only modify your own entries.'}), 403
@@ -692,7 +695,7 @@ def approve_convocation(entry_id):
                 return jsonify({'error': 'Entry not found'}), 404
 
             if entry['statut_approbation'] == 'APPROUVEE':
-                return jsonify({'error': 'Convocation already approved'}), 400
+                return jsonify({'success': True, 'message': f'Convocation déjà approuvée par {entry["signature_admin"]}'})
 
             # 2. Get current user full name (nom + prenom)
             cursor.execute('SELECT nom, prenom FROM users WHERE login = %s', (current_user,))
@@ -706,12 +709,48 @@ def approve_convocation(entry_id):
             if user_fullname not in entry['signature_admin']:
                 return jsonify({'error': f'Accès refusé. Seul {entry["signature_admin"]} peut approuver cette convocation.'}), 403
 
-            # 4. Update statut_approbation
-            cursor.execute('UPDATE history SET statut_approbation = %s WHERE id = %s', ('APPROUVEE', entry_id))
+            # 4. Calculate chrono number
+            # Get chrono initial value
+            cursor.execute('SELECT value FROM settings WHERE key_name = %s', ('chrono_initial',))
+            chrono_row = cursor.fetchone()
+            if not chrono_row:
+                return jsonify({'error': 'Chrono initial setting not found'}), 500
+            initial_value = int(chrono_row['value'])
+
+            # Count approved convocations excluding current
+            cursor.execute('SELECT COUNT(*) as cnt FROM history WHERE statut_approbation = %s AND id != %s', ('APPROUVEE', entry_id))
+            approved_count = cursor.fetchone()['cnt']
+
+            numero_chrono = str(initial_value + approved_count)
+            logger.info(f"[APPROVE] Calculated numero_chrono='{numero_chrono}' for entry_id={entry_id}")
+
+            # 5. Update both statut_approbation and numero_chrono
+            cursor.execute('UPDATE history SET statut_approbation = %s, numero_chrono = %s WHERE id = %s', ('APPROUVEE', numero_chrono, entry_id))
             conn.commit()
 
-            logger.info(f"Convocation {entry_id} approved by {user_fullname}")
-            return jsonify({'success': True, 'message': f'Convocation approuvée par {user_fullname}'})
+            # 6. Attempt to regenerate PDF with the chrono number (non-blocking)
+            try:
+                # Build regeneration command
+                cmd = [sys.executable, 'convocation_mysql.py', 'regenerate', '--entry_id', str(entry_id), '--numChrono', numero_chrono]
+
+                logger.info(f"[APPROVE] Regenerating PDF for entry {entry_id} with chrono {numero_chrono}, command: {' '.join(cmd)}")
+
+                # Execute regeneration
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=180, cwd='.')
+
+                if result.returncode != 0:
+                    logger.error(f"[APPROVE] PDF regeneration failed: {result.stderr}")
+                else:
+                    logger.info(f"[APPROVE] PDF regenerated successfully for entry {entry_id}")
+                    logger.info(f"[APPROVE] Generation stdout: {result.stdout}")
+
+            except subprocess.TimeoutExpired:
+                logger.error("[APPROVE] PDF regeneration timeout")
+            except Exception as e:
+                logger.error(f"[APPROVE] PDF regeneration error: {e}")
+
+            logger.info(f"Convocation {entry_id} approved by {user_fullname} with chrono {numero_chrono}")
+            return jsonify({'success': True, 'message': f'Convocation approuvée par {user_fullname}. Numéro chrono: {numero_chrono}'})
 
     except Exception as e:
         logger.error(f"Approval error: {e}")
@@ -1123,6 +1162,52 @@ def delete_code_agree(cc):
         return jsonify({'error': 'Internal server error'}), 500
 
 # ============================================================================
+# Settings Endpoints
+# ============================================================================
+
+@app.route('/api/settings/chrono_initial', methods=['GET'])
+@jwt_required()
+@admin_required
+def get_chrono_initial():
+    """Get chrono initial value - Admin Technique only."""
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute('SELECT value FROM settings WHERE key_name = %s', ('chrono_initial',))
+            row = cursor.fetchone()
+            if not row:
+                return jsonify({'error': 'Setting not found'}), 404
+            return jsonify({'chrono_initial': row['value']})
+    except Exception as e:
+        logger.error(f"Get chrono_initial error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/settings/chrono_initial', methods=['PUT'])
+@jwt_required()
+@admin_required
+def update_chrono_initial():
+    """Update chrono initial value - Admin Technique only."""
+    data = request.json
+    new_value = data.get('chrono_initial', '').strip()
+    current_user = get_jwt_identity()
+
+    if not new_value or not new_value.isdigit():
+        return jsonify({'error': 'chrono_initial must be a positive integer'}), 400
+
+    try:
+        with get_db_context() as (conn, cursor):
+            cursor.execute(
+                'UPDATE settings SET value = %s, modified_by = %s, modified_at = CURRENT_TIMESTAMP WHERE key_name = %s',
+                (new_value, current_user, 'chrono_initial')
+            )
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Setting not found'}), 404
+            conn.commit()
+            return jsonify({'success': True, 'chrono_initial': new_value})
+    except Exception as e:
+        logger.error(f"Update chrono_initial error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ============================================================================
 # Code Opérateur Endpoints
 # ============================================================================
 
@@ -1216,6 +1301,64 @@ def delete_code_operateur(code):
 # PDF Generation Endpoint
 # ============================================================================
 
+@app.route('/api/submit', methods=['POST'])
+@jwt_required()
+@limiter.limit("30 per hour")  # Prevent submission spam
+@generate_access_required
+def submit_convocation():
+    """Submit convocation data for approval without generating PDF."""
+    required_fields = ['cc', 'code_imp', 'verificateur', 'num_declaration', 'date_declaration', 'type_dossier', 'fraude', 'signature_admin']
+
+    # Validate required fields
+    for field in required_fields:
+        if not request.form.get(field):
+            logger.error(f"Missing required field: {field}")
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+
+    user = get_jwt_identity()
+
+    try:
+        with get_db_context() as (conn, cursor):
+            # Get next convocation number (for display, not chrono)
+            num_convoc = request.form.get('num_convoc', '')
+            if num_convoc:
+                next_num = num_convoc.zfill(4)
+            else:
+                cursor.execute('SELECT COUNT(*) as cnt FROM history WHERE user_login = %s', (user,))
+                count = cursor.fetchone()['cnt']
+                next_num = f'{count + 1:04d}'
+
+            # Save to history without generating PDF
+            cursor.execute(
+                '''INSERT INTO history (timestamp, verificateur, num_declaration, date_declaration, type_dossier, fraude, signature_admin, cc, code_imp, num_generated, filenames, user_login, statut, statut_approbation)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                (
+                    datetime.now().isoformat(),
+                    request.form['verificateur'],
+                    request.form['num_declaration'],
+                    request.form['date_declaration'],
+                    request.form['type_dossier'],
+                    request.form['fraude'],
+                    request.form['signature_admin'],
+                    request.form['cc'],
+                    request.form['code_imp'],
+                    0,  # num_generated
+                    '',  # filenames
+                    user,
+                    'EN_COURS',
+                    'EN_ATTENTE_APPROBATION'
+                )
+            )
+            conn.commit()
+
+            entry_id = cursor.lastrowid
+            logger.info(f"Convocation submitted for approval: entry_id={entry_id} by user {user}")
+            return jsonify({'success': True, 'message': 'Convocation soumise pour approbation', 'entry_id': entry_id})
+
+    except Exception as e:
+        logger.error(f"Submission error: {type(e).__name__}: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/generate', methods=['POST'])
 @jwt_required()
 @limiter.limit("30 per hour")  # Prevent PDF generation spam
@@ -1245,7 +1388,7 @@ def generate_convocation():
                 next_num = f'{count + 1:04d}'
 
         # Build command
-        cmd = [sys.executable, 'convocation_mysql.py', '--num_convoc', next_num]
+        cmd = [sys.executable, 'convocation_mysql.py', 'generate', '--num_convoc', next_num, '--numChrono', '']
         for field in required_fields:
             cmd.extend([f'--{field}', request.form[field]])
 
@@ -1313,16 +1456,24 @@ def generate_convocation():
 @app.route('/output/<path:filename>')
 @jwt_required()
 def serve_pdf(filename):
-    """Serve generated PDF files - only if approved."""
+    """Serve generated PDF files - only if approved. Redirect to Cloudinary if URL."""
     current_user = get_jwt_identity()
 
     try:
         with get_db_context() as (conn, cursor):
-            # Find the history entry for this filename
-            cursor.execute(
-                'SELECT id, user_login, statut_approbation, signature_admin FROM history WHERE filenames LIKE %s',
-                (f'%{filename}%',)
-            )
+            # Find the history entry for this filename (could be path or URL)
+            if filename.startswith('http'):
+                # If filename is a URL, find by exact match
+                cursor.execute(
+                    'SELECT id, user_login, statut_approbation, signature_admin FROM history WHERE filenames = %s',
+                    (filename,)
+                )
+            else:
+                # Local filename
+                cursor.execute(
+                    'SELECT id, user_login, statut_approbation, signature_admin FROM history WHERE filenames LIKE %s',
+                    (f'%{filename}%',)
+                )
             entry = cursor.fetchone()
 
             if not entry:
@@ -1356,7 +1507,13 @@ def serve_pdf(filename):
             if entry['statut_approbation'] != 'APPROUVEE':
                 return jsonify({'error': 'Convocation not approved for printing'}), 403
 
-        # Serve the file
+        # If filename is a URL (Cloudinary), redirect to it
+        if filename.startswith('http'):
+            from flask import redirect
+            logger.info(f"Redirecting to Cloudinary URL: {filename}")
+            return redirect(filename)
+
+        # Otherwise, serve local file
         return send_from_directory('output', filename)
 
     except Exception as e:

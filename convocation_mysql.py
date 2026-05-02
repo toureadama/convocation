@@ -11,6 +11,11 @@ from docxtpl import DocxTemplate
 import subprocess
 import shutil
 from db_config import get_db_connection, close_connection
+from dotenv import load_dotenv
+import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class ConvocationGenerator:
     def __init__(self, template_path: str = 'Convocation_modele.docx', output_dir: str = 'output'):
@@ -18,6 +23,17 @@ class ConvocationGenerator:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.doc = DocxTemplate(self.template_path)
+
+        # Load environment variables and configure Cloudinary
+        load_dotenv('secrets.env')
+        print(f"[DEBUG] Loaded env: CLOUD_NAME={os.getenv('CLOUDINARY_CLOUD_NAME')}")
+        import cloudinary
+        cloudinary.config(
+            cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+            api_key=os.getenv('CLOUDINARY_API_KEY'),
+            api_secret=os.getenv('CLOUDINARY_API_SECRET')
+        )
+        print("[DEBUG] Cloudinary configured")
         
     def _get_civilite_by_verif(self, verificateur: str):
         """Find user civilité by full name (verificateur) in users table."""
@@ -308,7 +324,7 @@ class ConvocationGenerator:
             raise ValueError(f'code_operateur {imp} not found in operateur')
         return dict(row_imp )
 
-    def generate(self, cc: str, code_imp: str, verificateur: str = '', type_dossier: str = '', num_declaration: str = '', date_declaration: str = '', fraude: str = '', signature_admin: str = '', num_convoc: str = '0001') -> Tuple[str, str]:
+    def generate(self, cc: str, code_imp: str, verificateur: str = '', type_dossier: str = '', num_declaration: str = '', date_declaration: str = '', fraude: str = '', signature_admin: str = '', num_convoc: str = '0001', numChrono: str = '') -> Tuple[str, str]:
         row = self._get_company_by_cc(cc)
         row_imp = self._get_operateur_by_imp(code_imp)
         initiales = self._get_initiales(verificateur)
@@ -336,6 +352,7 @@ class ConvocationGenerator:
             'init_adm': Init_Adm,
             'initiales': initiales,
             'num_convoc': num_convoc,
+            'numero_chrono': numChrono,
             'num_declaration': num_declaration,
             'date_declaration': date_declaration,
             'fraude': fraude_libelle,
@@ -346,54 +363,193 @@ class ConvocationGenerator:
             'chef': chef
         }
 
-        self.doc.render(context)
+        logging.info(f"Context keys: {list(context.keys())}, numChrono: '{context.get('numChrono')}'")
+
+        try:
+            self.doc.render(context)
+            logging.info(f"[GENERATE] DOCX template rendered successfully with numChrono='{numChrono}'")
+        except Exception as e:
+            logging.error(f"[GENERATE] DOCX template rendering failed: {e}")
+            raise
+
         docx_name = f"Convocation_{initiales}_{annee}_{num_convoc}.docx"
         pdf_name = f"Convocation_{initiales}_{annee}_{num_convoc}.pdf"
         docx_path = self.output_dir / docx_name
         pdf_path = self.output_dir / pdf_name
 
-        self.doc.save(docx_path)
+        try:
+            self.doc.save(docx_path)
+            logging.info(f"[GENERATE] DOCX file saved successfully: {docx_path}")
+        except Exception as e:
+            logging.error(f"[GENERATE] DOCX file save failed: {e}")
+            raise
 
         # Cross-platform PDF conversion using LibreOffice (works on Linux/Render & Windows)
         try:
+            logging.info("Starting PDF conversion")
             self._convert_to_pdf(str(docx_path), str(pdf_path))
-            logging.info(f'PDF generated: {pdf_path}')
+            logging.info(f'[GENERATE] PDF generated successfully: {pdf_path}')
 
             # Remove DOCX file after successful PDF conversion
             if os.path.exists(docx_path):
                 os.remove(docx_path)
-                logging.info(f'DOCX removed: {docx_path}')
+                logging.info(f'[GENERATE] DOCX removed: {docx_path}')
         except FileNotFoundError as e:
-            logging.error(f"PDF conversion failed - LibreOffice not found: {e}")
+            logging.error(f"[GENERATE] PDF conversion failed - LibreOffice not found: {e}")
             raise RuntimeError("LibreOffice is required for PDF conversion. Install it or use Windows with MS Word.")
         except Exception as e:
-            logging.error(f"PDF conversion failed: {e}")
+            logging.error(f"[GENERATE] PDF conversion failed: {e}")
             raise RuntimeError(f"PDF conversion failed: {e}")
-        
+
+        # Calculate filename components
+        from datetime import datetime
+        initiales = self._get_initiales(verificateur)
+        annee = datetime.now().year
+
+        # Upload to Cloudinary
+        try:
+            print(f"[DEBUG] Attempting Cloudinary upload for {pdf_path}")
+            import cloudinary.uploader
+            upload_result = cloudinary.uploader.upload(
+                str(pdf_path),
+                folder="convocations",
+                resource_type="raw",
+                public_id=f"convocation_{initiales}-{annee}-{num_convoc}"
+            )
+            pdf_url = upload_result['secure_url']
+            logging.info(f"[GENERATE] Uploaded to Cloudinary: {pdf_url}")
+
+            # Remove local files
+            os.remove(pdf_path)
+            if os.path.exists(docx_path):
+                os.remove(docx_path)
+                logging.info(f'[GENERATE] DOCX removed: {docx_path}')
+        except Exception as e:
+            logging.error(f"[GENERATE] Cloudinary upload failed: {e}")
+            pdf_url = str(pdf_path)  # Fallback to local
+            # Still remove DOCX
+            if os.path.exists(docx_path):
+                os.remove(docx_path)
+                logging.info(f'[GENERATE] DOCX removed: {docx_path}')
+
+        print(f'OK : {pdf_url}')
+
+        return str(docx_path), pdf_url
+
+    def regenerate(self, entry_id: int, numChrono: str):
+        """Regenerate PDF for an existing entry with updated chrono number."""
+        logging.info(f"[REGENERATE] Starting regeneration for entry_id={entry_id} with numChrono='{numChrono}'")
+
+        # Fetch entry data from database
+        conn = get_db_connection()
+        if not conn:
+            raise ValueError("MySQL connection failed")
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            'SELECT cc, code_imp, verificateur, type_dossier, num_declaration, date_declaration, fraude, signature_admin, filenames FROM history WHERE id = %s',
+            (entry_id,)
+        )
+        entry_data = cursor.fetchone()
+
+        if not entry_data:
+            close_connection(conn)
+            raise ValueError(f'Entry {entry_id} not found in history')
+
+        # Parse num_convoc from the existing PDF filename or calculate if not present
+        filename = entry_data['filenames']
+        if filename:
+            # Filename format: Convocation_INITIALS_YEAR_NUMCONVOC.pdf
+            parts = filename.split('_')
+            num_convoc = parts[-1].split('.')[0]
+        else:
+            # Calculate num_convoc as next number for the verificateur
+            cursor.execute('SELECT COUNT(*) as cnt FROM history WHERE user_login = (SELECT user_login FROM history WHERE id = %s)', (entry_id,))
+            count = cursor.fetchone()['cnt']
+            num_convoc = f'{count:04d}'
+
+        close_connection(conn)
+
+        logging.info(f"[REGENERATE] Extracted num_convoc='{num_convoc}' and numChrono='{numChrono}' for entry_id={entry_id}")
+
+        # Generate PDF with the provided numChrono
+        logging.info(f"Passing numChrono='{numChrono}' to generate")
+        try:
+            docx_path, pdf_path = self.generate(
+                cc=entry_data['cc'],
+                code_imp=entry_data['code_imp'],
+                verificateur=entry_data['verificateur'],
+                type_dossier=entry_data['type_dossier'],
+                num_declaration=entry_data['num_declaration'],
+                date_declaration=entry_data['date_declaration'],
+                fraude=entry_data['fraude'],
+                signature_admin=entry_data['signature_admin'],
+                num_convoc=num_convoc,
+                numChrono=numChrono
+            )
+            logging.info(f"[REGENERATE] DOCX rendering and PDF conversion successful for entry_id={entry_id}")
+        except Exception as e:
+            logging.error(f"[REGENERATE] DOCX rendering or PDF conversion failed for entry_id={entry_id}: {e}")
+            raise
+
+        # Update filenames in database
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            filename = pdf_path
+            cursor.execute('UPDATE history SET filenames = %s WHERE id = %s', (filename, entry_id))
+            conn.commit()
+            close_connection(conn)
+            logging.info(f"[REGENERATE] Database update successful: filename='{filename}' for entry_id={entry_id}")
+        except Exception as e:
+            logging.error(f"[REGENERATE] Database update failed for entry_id={entry_id}: {e}")
+            raise
+
+        logging.info(f"[REGENERATE] Regeneration completed: docx_path='{docx_path}', pdf_path='{pdf_path}'")
+
         print(f'OK : {pdf_path}')
-        
+
         return str(docx_path), str(pdf_path)
+
+
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Générateur convocation SQLite local.')
-    parser.add_argument('--cc', required=True, help='N° Code Déclarant')
-    parser.add_argument('--code_imp', required=True, help='N° Code Opérateur')
-    parser.add_argument('--verificateur', required=True)
-    parser.add_argument('--type_dossier', required=True, help='Type de dossier (BDAP/DARRV/BADARRV)')
-    parser.add_argument('--num_declaration', required=True)
-    parser.add_argument('--date_declaration', required=True)
-    parser.add_argument('--fraude', required=True)
-    parser.add_argument('--signature_admin', required=True)
-    parser.add_argument('--num_convoc', default='0001')
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+    # Generate command
+    generate_parser = subparsers.add_parser('generate', help='Generate new convocation')
+    generate_parser.add_argument('--cc', required=True, help='N° Code Déclarant')
+    generate_parser.add_argument('--code_imp', required=True, help='N° Code Opérateur')
+    generate_parser.add_argument('--verificateur', required=True)
+    generate_parser.add_argument('--type_dossier', required=True, help='Type de dossier (BDAP/DARRV/BADARRV)')
+    generate_parser.add_argument('--num_declaration', required=True)
+    generate_parser.add_argument('--date_declaration', required=True)
+    generate_parser.add_argument('--fraude', required=True)
+    generate_parser.add_argument('--signature_admin', required=True)
+    generate_parser.add_argument('--num_convoc', default='0001')
+    generate_parser.add_argument('--numChrono', default='')
+
+    # Regenerate command
+    regenerate_parser = subparsers.add_parser('regenerate', help='Regenerate existing convocation with chrono')
+    regenerate_parser.add_argument('--entry_id', required=True, type=int, help='Entry ID to regenerate')
+    regenerate_parser.add_argument('--numChrono', required=True, help='Chrono number')
+
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     gen = ConvocationGenerator()
     try:
-        gen.generate(args.cc, args.code_imp, args.verificateur, args.type_dossier, args.num_declaration, args.date_declaration, args.fraude, args.signature_admin, args.num_convoc)
+        if args.command == 'generate':
+            gen.generate(args.cc, args.code_imp, args.verificateur, args.type_dossier, args.num_declaration, args.date_declaration, args.fraude, args.signature_admin, args.num_convoc, args.numChrono)
+        elif args.command == 'regenerate':
+            gen.regenerate(args.entry_id, args.numChrono)
+        else:
+            parser.print_help()
+            sys.exit(1)
     except Exception as e:
-        logging.error(f"Generation failed: {e}")
+        logging.error(f"Command failed: {e}")
         sys.exit(1)
 
 if __name__ == '__main__':

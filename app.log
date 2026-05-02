@@ -547,3 +547,1061 @@ INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
 2026-04-28 22:41:55 [INFO] History retrieval successful: 5 records
 2026-04-28 22:41:56 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
 2026-04-28 22:41:56 [INFO] History retrieval successful: 5 records
+2026-04-28 23:36:16 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 23:36:17 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 23:57:43 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 23:57:44 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 23:57:58 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 23:57:59 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 23:58:22 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 23:58:23 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 23:58:43 [INFO] [OK] MySQL database initialized successfully
+2026-04-28 23:58:44 [INFO] Starting server on port 5000 (production: False)
+2026-04-28 23:58:46 [INFO] User logged in: info (Administrateur Technique)
+2026-04-28 23:58:53 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 23:58:54 [INFO] History retrieval successful: 9 records
+2026-04-28 23:58:54 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-28 23:58:55 [INFO] History retrieval successful: 9 records
+2026-04-28 23:59:15 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-29 00:00:02 [INFO] User logged in: 480442T (Vérificateur)
+2026-04-29 00:00:06 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:00:07 [INFO] History retrieval successful: 4 records
+2026-04-29 00:00:08 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:00:08 [INFO] History retrieval successful: 4 records
+2026-04-29 00:00:53 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0005 --cc... for user 480442T
+2026-04-29 00:01:09 [INFO] Generation process returncode: 0
+2026-04-29 00:01:09 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0005.pdf
+
+2026-04-29 00:01:09 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0005.docx \u2192 output\Convocation_TR_2026_0005.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0005.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0005.pdf (234072 bytes)
+INFO:root:PDF generated: output\Convocation_TR_2026_0005.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
+
+2026-04-29 00:01:09 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0005.pdf']
+2026-04-29 00:01:12 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-04-29 00:01:28 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:01:29 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:01:29 [INFO] History retrieval successful: 5 records
+2026-04-29 00:01:29 [INFO] History retrieval successful: 5 records
+2026-04-29 00:01:56 [INFO] User logged in: 398954D (Administrateur)
+2026-04-29 00:02:01 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-29 00:02:01 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-04-29 00:02:01 [INFO] History retrieval successful: 10 records
+2026-04-29 00:02:02 [INFO] History retrieval successful: 10 records
+2026-04-29 00:02:21 [INFO] Convocation 84 approved by COULIBALY KARIM
+2026-04-29 00:03:04 [INFO] User logged in: 480442T (Vérificateur)
+2026-04-29 00:03:07 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:03:08 [INFO] History retrieval successful: 5 records
+2026-04-29 00:03:09 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-04-29 00:03:10 [INFO] History retrieval successful: 5 records
+2026-04-29 00:03:47 [INFO] User logged in: info (Administrateur Technique)
+2026-04-29 00:03:51 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-29 00:03:51 [INFO] History retrieval successful: 10 records
+2026-04-29 00:03:51 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-04-29 00:03:52 [INFO] History retrieval successful: 10 records
+2026-04-29 00:04:07 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-29 00:04:14 [INFO] History entry 73 deleted by info (Admin Technique)
+2026-04-29 00:04:21 [INFO] History entry 74 deleted by info (Admin Technique)
+2026-04-29 00:04:27 [INFO] History entry 75 deleted by info (Admin Technique)
+2026-04-29 00:04:35 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-29 00:04:42 [INFO] History entry 76 deleted by info (Admin Technique)
+2026-04-29 00:04:49 [INFO] History entry 77 deleted by info (Admin Technique)
+2026-04-29 00:04:55 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-29 00:05:02 [INFO] History entry 78 deleted by info (Admin Technique)
+2026-04-29 00:05:10 [INFO] History entry 79 deleted by info (Admin Technique)
+2026-04-29 00:05:17 [INFO] History entry 80 deleted by info (Admin Technique)
+2026-04-29 00:05:24 [INFO] History entry 81 deleted by info (Admin Technique)
+2026-04-29 00:06:10 [INFO] [OK] MySQL database initialized successfully
+2026-04-29 00:06:12 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 13:56:04 [INFO] [OK] Default chrono_initial setting created: 1
+2026-05-01 13:56:05 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 13:56:06 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 13:56:20 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 13:56:21 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 13:56:44 [INFO] User logged in: info (Administrateur Technique)
+2026-05-01 13:56:57 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 13:56:59 [INFO] History retrieval successful: 4 records
+2026-05-01 13:57:00 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 13:57:00 [INFO] History retrieval successful: 4 records
+2026-05-01 13:59:05 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 13:59:44 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0003 --numChrono... for user 480442T
+2026-05-01 14:00:15 [INFO] Generation process returncode: 0
+2026-05-01 14:00:15 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0003.pdf
+
+2026-05-01 14:00:15 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0003.docx \u2192 output\Convocation_TR_2026_0003.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0003.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0003.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0003.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0003.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0003.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0003.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0003.docx
+
+2026-05-01 14:00:15 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0003.pdf']
+2026-05-01 14:00:17 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 14:00:47 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 14:01:08 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:01:09 [INFO] History retrieval successful: 5 records
+2026-05-01 14:01:10 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:01:10 [INFO] History retrieval successful: 5 records
+2026-05-01 14:02:05 [ERROR] PDF regeneration failed for entry 88: PDF conversion failed: PDF conversion failed. Please install either:
+1. LibreOffice (recommended, cross-platform): https://www.libreoffice.org/
+2. Microsoft Word (Windows only) with pywin32: pip install pywin32
+2026-05-01 14:02:05 [INFO] Convocation 88 approved by COULIBALY KARIM with numero_chrono 0719
+2026-05-01 14:10:27 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:10:28 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:10:56 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:10:58 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:13:53 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 14:13:56 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 14:13:57 [INFO] History retrieval successful: 3 records
+2026-05-01 14:13:57 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 14:13:57 [INFO] History retrieval successful: 3 records
+2026-05-01 14:14:33 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0004 --numChrono... for user 480442T
+2026-05-01 14:14:55 [INFO] Generation process returncode: 0
+2026-05-01 14:14:55 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0004.pdf
+
+2026-05-01 14:14:55 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0004.docx \u2192 output\Convocation_TR_2026_0004.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0004.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0004.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0004.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0004.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0004.pdf
+INFO:root:PDF generated: output\Convocation_TR_2026_0004.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0004.docx
+
+2026-05-01 14:14:55 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0004.pdf']
+2026-05-01 14:14:56 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 14:16:34 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 14:16:52 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:16:52 [INFO] History retrieval successful: 6 records
+2026-05-01 14:16:52 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:16:53 [INFO] History retrieval successful: 6 records
+2026-05-01 14:17:46 [INFO] PDF regenerated for entry 89 with numero_chrono 720
+2026-05-01 14:17:46 [INFO] Convocation 89 approved by COULIBALY KARIM with numero_chrono 720
+2026-05-01 14:25:40 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:25:42 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:25:57 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:25:58 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:26:11 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:26:12 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:34:19 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:34:21 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:34:43 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:34:45 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:35:01 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:35:02 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:35:38 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:35:40 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:37:04 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 14:37:11 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 14:37:11 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 14:37:11 [INFO] History retrieval successful: 4 records
+2026-05-01 14:37:11 [INFO] History retrieval successful: 4 records
+2026-05-01 14:37:51 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0005 --numChrono... for user 480442T
+2026-05-01 14:38:12 [INFO] Generation process returncode: 0
+2026-05-01 14:38:12 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0005.pdf
+
+2026-05-01 14:38:12 [WARNING] Generation stderr: INFO:root:[PDF] Converting output\Convocation_TR_2026_0005.docx \u2192 output\Convocation_TR_2026_0005.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0005.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0005.pdf (234072 bytes)
+INFO:root:PDF generated: output\Convocation_TR_2026_0005.pdf
+INFO:root:DOCX removed: output\Convocation_TR_2026_0005.docx
+
+2026-05-01 14:38:12 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0005.pdf']
+2026-05-01 14:38:14 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 14:38:38 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 14:38:45 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:38:45 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 14:38:45 [INFO] History retrieval successful: 7 records
+2026-05-01 14:38:46 [INFO] History retrieval successful: 7 records
+2026-05-01 14:39:36 [INFO] User logged in: info (Administrateur Technique)
+2026-05-01 14:39:41 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 14:39:42 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 14:39:42 [INFO] History retrieval successful: 7 records
+2026-05-01 14:39:42 [INFO] History retrieval successful: 7 records
+2026-05-01 14:40:10 [ERROR] Database error: Unread result found
+2026-05-01 14:40:10 [ERROR] PDF serving error: Unread result found
+2026-05-01 14:40:29 [ERROR] Database error: Unread result found
+2026-05-01 14:40:29 [ERROR] PDF serving error: Unread result found
+2026-05-01 14:43:26 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:43:27 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:43:47 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:43:49 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:44:19 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:44:21 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 14:44:43 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 14:44:44 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:12:38 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:12:39 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:20:26 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:20:28 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:20:49 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:20:51 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:21:12 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:21:13 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:25:53 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 15:25:59 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 15:25:59 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 15:26:00 [INFO] History retrieval successful: 5 records
+2026-05-01 15:26:01 [INFO] History retrieval successful: 5 records
+2026-05-01 15:26:42 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py --num_convoc 0006 --numChrono... for user 480442T
+2026-05-01 15:26:44 [INFO] Generation process returncode: 2
+2026-05-01 15:26:44 [INFO] Generation stdout: 
+2026-05-01 15:26:44 [WARNING] Generation stderr: usage: convocation_mysql.py [-h] {generate,regenerate} ...
+convocation_mysql.py: error: argument command: invalid choice: '0006' (choose from 'generate', 'regenerate')
+
+2026-05-01 15:26:44 [ERROR] PDF generation failed: usage: convocation_mysql.py [-h] {generate,regenerate} ...
+convocation_mysql.py: error: argument command: invalid choice: '0006' (choose from 'generate', 'regenerate')
+
+2026-05-01 15:26:44 [ERROR] CMD ERROR: usage: convocation_mysql.py [-h] {generate,regenerate} ...
+convocation_mysql.py: error: argument command: invalid choice: '0006' (choose from 'generate', 'regenerate')
+
+2026-05-01 15:30:00 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:30:02 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:30:42 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:30:43 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:34:15 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:34:16 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:38:15 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 15:38:50 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0006... for user 480442T
+2026-05-01 15:39:06 [INFO] Generation process returncode: 0
+2026-05-01 15:39:06 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0006.pdf
+
+2026-05-01 15:39:06 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0006.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0006.docx \u2192 output\Convocation_TR_2026_0006.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0006.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0006.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0006.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0006.pdf (232045 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0006.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0006.docx
+
+2026-05-01 15:39:06 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0006.pdf']
+2026-05-01 15:39:07 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 15:39:42 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 15:39:50 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:39:51 [INFO] History retrieval successful: 8 records
+2026-05-01 15:39:51 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:39:51 [INFO] History retrieval successful: 8 records
+2026-05-01 15:40:11 [INFO] [APPROVE] Calculated numero_chrono='722' for entry_id=91
+2026-05-01 15:40:12 [INFO] [APPROVE] Regenerating PDF for entry 91 with chrono 722, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 91 --numChrono 722
+2026-05-01 15:40:33 [INFO] [APPROVE] PDF regenerated successfully for entry 91
+2026-05-01 15:40:33 [INFO] Convocation 91 approved by COULIBALY KARIM with chrono 722
+2026-05-01 15:45:52 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:45:53 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:46:05 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 15:46:06 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 15:46:32 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 15:47:00 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0007... for user 480442T
+2026-05-01 15:47:18 [INFO] Generation process returncode: 1
+2026-05-01 15:47:18 [INFO] Generation stdout: 
+2026-05-01 15:47:18 [WARNING] Generation stderr: ERROR:root:[GENERATE] DOCX template rendering failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+ERROR:root:Command failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+
+2026-05-01 15:47:18 [ERROR] PDF generation failed: ERROR:root:[GENERATE] DOCX template rendering failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+ERROR:root:Command failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+
+2026-05-01 15:47:18 [ERROR] CMD ERROR: ERROR:root:[GENERATE] DOCX template rendering failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+ERROR:root:Command failed: [Errno 2] No such file or directory: 'Convocation_modele.docx'
+
+2026-05-01 15:48:34 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 15:49:00 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0007... for user 480442T
+2026-05-01 15:49:17 [INFO] Generation process returncode: 0
+2026-05-01 15:49:17 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0007.pdf
+
+2026-05-01 15:49:17 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0007.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0007.docx \u2192 output\Convocation_TR_2026_0007.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0007.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0007.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0007.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0007.pdf (234531 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0007.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0007.docx
+
+2026-05-01 15:49:17 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0007.pdf']
+2026-05-01 15:49:19 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 15:49:49 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 15:49:59 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:50:00 [INFO] History retrieval successful: 9 records
+2026-05-01 15:50:00 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:50:01 [INFO] History retrieval successful: 9 records
+2026-05-01 15:50:22 [INFO] [APPROVE] Calculated numero_chrono='723' for entry_id=92
+2026-05-01 15:50:22 [INFO] [APPROVE] Regenerating PDF for entry 92 with chrono 723, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 92 --numChrono 723
+2026-05-01 15:50:43 [INFO] [APPROVE] PDF regenerated successfully for entry 92
+2026-05-01 15:50:43 [INFO] Convocation 92 approved by COULIBALY KARIM with chrono 723
+2026-05-01 15:51:51 [ERROR] Database error: Unread result found
+2026-05-01 15:51:51 [ERROR] PDF serving error: Unread result found
+2026-05-01 15:53:52 [INFO] User logged in: info (Administrateur Technique)
+2026-05-01 15:53:56 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 15:53:56 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-01 15:53:56 [INFO] History retrieval successful: 0 records
+2026-05-01 15:53:57 [INFO] History retrieval successful: 9 records
+2026-05-01 15:54:17 [INFO] History entry 84 deleted by info (Admin Technique)
+2026-05-01 15:54:23 [INFO] History entry 86 deleted by info (Admin Technique)
+2026-05-01 15:54:28 [INFO] History entry 88 deleted by info (Admin Technique)
+2026-05-01 15:54:31 [INFO] History entry 90 deleted by info (Admin Technique)
+2026-05-01 15:54:35 [INFO] History entry 87 deleted by info (Admin Technique)
+2026-05-01 15:54:38 [INFO] History entry 89 deleted by info (Admin Technique)
+2026-05-01 15:54:42 [INFO] History entry 91 deleted by info (Admin Technique)
+2026-05-01 15:54:46 [INFO] History entry 92 deleted by info (Admin Technique)
+2026-05-01 15:54:52 [INFO] History entry 85 deleted by info (Admin Technique)
+2026-05-01 15:55:22 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 15:55:27 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 15:55:27 [INFO] History retrieval successful: 0 records
+2026-05-01 15:55:27 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 15:55:28 [INFO] History retrieval successful: 0 records
+2026-05-01 15:56:51 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0001... for user 480442T
+2026-05-01 15:57:09 [INFO] Generation process returncode: 0
+2026-05-01 15:57:09 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0001.pdf
+
+2026-05-01 15:57:09 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0001.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0001.docx \u2192 output\Convocation_TR_2026_0001.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0001.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0001.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0001.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0001.pdf (235812 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0001.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0001.docx
+
+2026-05-01 15:57:09 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0001.pdf']
+2026-05-01 15:57:11 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 15:57:39 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 15:57:47 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:57:47 [INFO] History retrieval successful: 1 records
+2026-05-01 15:57:48 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 15:57:48 [INFO] History retrieval successful: 1 records
+2026-05-01 15:58:03 [INFO] [APPROVE] Calculated numero_chrono='717' for entry_id=93
+2026-05-01 15:58:04 [INFO] [APPROVE] Regenerating PDF for entry 93 with chrono 717, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 93 --numChrono 717
+2026-05-01 15:58:23 [INFO] [APPROVE] PDF regenerated successfully for entry 93
+2026-05-01 15:58:23 [INFO] Convocation 93 approved by COULIBALY KARIM with chrono 717
+2026-05-01 16:03:23 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 16:03:24 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 16:03:26 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:03:26 [INFO] History retrieval successful: 1 records
+2026-05-01 16:03:30 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:03:30 [INFO] History retrieval successful: 1 records
+2026-05-01 16:04:35 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:04:35 [INFO] History retrieval successful: 0 records
+2026-05-01 16:04:45 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:04:45 [INFO] History retrieval successful: 1 records
+2026-05-01 16:06:06 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 16:06:11 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 16:06:11 [INFO] History retrieval successful: 1 records
+2026-05-01 16:06:11 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 16:06:12 [INFO] History retrieval successful: 1 records
+2026-05-01 16:06:44 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0002... for user 480442T
+2026-05-01 16:07:09 [INFO] Generation process returncode: 0
+2026-05-01 16:07:09 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0002.pdf
+
+2026-05-01 16:07:09 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0002.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0002.docx \u2192 output\Convocation_TR_2026_0002.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0002.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0002.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0002.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0002.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0002.pdf
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0002.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0002.docx
+
+2026-05-01 16:07:09 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0002.pdf']
+2026-05-01 16:07:11 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 16:07:25 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 16:07:33 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:07:34 [INFO] History retrieval successful: 2 records
+2026-05-01 16:07:34 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:07:35 [INFO] History retrieval successful: 2 records
+2026-05-01 16:07:48 [INFO] [APPROVE] Calculated numero_chrono='718' for entry_id=94
+2026-05-01 16:07:49 [INFO] [APPROVE] Regenerating PDF for entry 94 with chrono 718, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 94 --numChrono 718
+2026-05-01 16:08:11 [INFO] [APPROVE] PDF regenerated successfully for entry 94
+2026-05-01 16:08:11 [INFO] Convocation 94 approved by COULIBALY KARIM with chrono 718
+2026-05-01 16:11:47 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 16:11:49 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 16:13:01 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 16:13:35 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0003... for user 480442T
+2026-05-01 16:13:54 [INFO] Generation process returncode: 0
+2026-05-01 16:13:54 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0003.pdf
+
+2026-05-01 16:13:54 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0003.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0003.docx \u2192 output\Convocation_TR_2026_0003.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0003.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0003.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0003.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0003.pdf (234747 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0003.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0003.docx
+
+2026-05-01 16:13:54 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0003.pdf']
+2026-05-01 16:13:56 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 16:14:18 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 16:14:26 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:14:26 [INFO] History retrieval successful: 3 records
+2026-05-01 16:14:27 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:14:27 [INFO] History retrieval successful: 3 records
+2026-05-01 16:14:38 [INFO] [APPROVE] Calculated numero_chrono='719' for entry_id=95
+2026-05-01 16:14:39 [INFO] [APPROVE] Regenerating PDF for entry 95 with chrono 719, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 95 --numChrono 719
+2026-05-01 16:15:03 [INFO] [APPROVE] PDF regenerated successfully for entry 95
+2026-05-01 16:15:03 [INFO] Convocation 95 approved by COULIBALY KARIM with chrono 719
+2026-05-01 16:18:36 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 16:18:37 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 16:27:50 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 16:27:52 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 16:34:39 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 16:35:05 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0004... for user 480442T
+2026-05-01 16:35:22 [INFO] Generation process returncode: 0
+2026-05-01 16:35:22 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0004.pdf
+
+2026-05-01 16:35:22 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0004.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0004.docx \u2192 output\Convocation_TR_2026_0004.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0004.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0004.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0004.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0004.pdf (236083 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0004.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0004.docx
+
+2026-05-01 16:35:22 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0004.pdf']
+2026-05-01 16:35:24 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 16:35:36 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 16:35:44 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:35:44 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:35:44 [INFO] History retrieval successful: 4 records
+2026-05-01 16:35:44 [INFO] History retrieval successful: 4 records
+2026-05-01 16:36:15 [INFO] [APPROVE] Calculated numero_chrono='720' for entry_id=96
+2026-05-01 16:36:16 [INFO] [APPROVE] Regenerating PDF for entry 96 with chrono 720, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 96 --numChrono 720
+2026-05-01 16:36:37 [INFO] [APPROVE] PDF regenerated successfully for entry 96
+2026-05-01 16:36:37 [INFO] Convocation 96 approved by COULIBALY KARIM with chrono 720
+2026-05-01 16:54:55 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 16:55:03 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:55:03 [INFO] History retrieval successful: 4 records
+2026-05-01 16:55:04 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:55:04 [INFO] History retrieval successful: 4 records
+2026-05-01 16:55:35 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:55:35 [INFO] History retrieval successful: 4 records
+2026-05-01 16:55:35 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 16:55:36 [INFO] History retrieval successful: 4 records
+2026-05-01 17:01:52 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:01:52 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:01:52 [INFO] History retrieval successful: 4 records
+2026-05-01 17:01:52 [INFO] History retrieval successful: 4 records
+2026-05-01 17:01:57 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:01:57 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:01:57 [INFO] History retrieval successful: 4 records
+2026-05-01 17:01:58 [INFO] History retrieval successful: 4 records
+2026-05-01 17:02:10 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:02:10 [INFO] History retrieval successful: 4 records
+2026-05-01 17:02:20 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:02:20 [INFO] History retrieval successful: 4 records
+2026-05-01 17:14:57 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 17:14:58 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 17:23:40 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 17:24:37 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0005... for user 480442T
+2026-05-01 17:24:57 [INFO] Generation process returncode: 0
+2026-05-01 17:24:57 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0005.pdf
+
+2026-05-01 17:24:57 [WARNING] Generation stderr: INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0005.docx \u2192 output\Convocation_TR_2026_0005.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0005.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0005.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0005.pdf (234072 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0005.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0005.docx
+
+2026-05-01 17:24:57 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0005.pdf']
+2026-05-01 17:24:59 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 17:25:28 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:25:38 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:25:38 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:25:38 [INFO] History retrieval successful: 5 records
+2026-05-01 17:25:38 [INFO] History retrieval successful: 5 records
+2026-05-01 17:25:54 [INFO] [APPROVE] Calculated numero_chrono='721' for entry_id=97
+2026-05-01 17:25:55 [INFO] [APPROVE] Regenerating PDF for entry 97 with chrono 721, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 97 --numChrono 721
+2026-05-01 17:26:22 [INFO] [APPROVE] PDF regenerated successfully for entry 97
+2026-05-01 17:26:22 [INFO] Convocation 97 approved by COULIBALY KARIM with chrono 721
+2026-05-01 17:27:38 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:27:47 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:27:47 [INFO] History retrieval successful: 5 records
+2026-05-01 17:27:48 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:27:48 [INFO] History retrieval successful: 5 records
+2026-05-01 17:28:03 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 17:28:04 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 17:28:06 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:28:12 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:28:12 [INFO] History retrieval successful: 5 records
+2026-05-01 17:28:13 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:28:13 [INFO] History retrieval successful: 5 records
+2026-05-01 17:29:17 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:29:27 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:29:28 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:29:28 [INFO] History retrieval successful: 5 records
+2026-05-01 17:29:28 [INFO] History retrieval successful: 5 records
+2026-05-01 17:34:47 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 17:34:48 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 17:43:32 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 17:43:36 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 17:43:38 [INFO] History retrieval successful: 5 records
+2026-05-01 17:43:39 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-01 17:43:39 [INFO] History retrieval successful: 5 records
+2026-05-01 17:44:06 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0006... for user 480442T
+2026-05-01 17:44:28 [INFO] Generation process returncode: 0
+2026-05-01 17:44:28 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0006.pdf
+
+2026-05-01 17:44:28 [WARNING] Generation stderr: INFO:root:Context keys: ['compte_contribuale', 'societe', 'code_operateur', 'operateur', 'verificateur', 'init_adm', 'initiales', 'num_convoc', 'numChrono', 'num_declaration', 'date_declaration', 'fraude', 'date', 'numMY', 'annee', 'administrateur', 'chef'], numChrono: ''
+INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0006.docx
+INFO:root:Starting PDF conversion
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0006.docx \u2192 output\Convocation_TR_2026_0006.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0006.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0006.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0006.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0006.pdf (232045 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0006.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0006.docx
+
+2026-05-01 17:44:28 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0006.pdf']
+2026-05-01 17:44:30 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 17:44:56 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:45:05 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:45:05 [INFO] History retrieval successful: 6 records
+2026-05-01 17:45:06 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:45:06 [INFO] History retrieval successful: 6 records
+2026-05-01 17:45:26 [INFO] [APPROVE] Calculated numero_chrono='722' for entry_id=98
+2026-05-01 17:45:26 [INFO] [APPROVE] Regenerating PDF for entry 98 with chrono 722, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 98 --numChrono 722
+2026-05-01 17:45:53 [INFO] [APPROVE] PDF regenerated successfully for entry 98
+2026-05-01 17:45:53 [INFO] Convocation 98 approved by COULIBALY KARIM with chrono 722
+2026-05-01 17:49:46 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 17:49:48 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 17:54:17 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 17:54:44 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0007... for user 480442T
+2026-05-01 17:55:01 [INFO] Generation process returncode: 0
+2026-05-01 17:55:01 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0007.pdf
+
+2026-05-01 17:55:01 [WARNING] Generation stderr: INFO:root:Context keys: ['compte_contribuale', 'societe', 'code_operateur', 'operateur', 'verificateur', 'init_adm', 'initiales', 'num_convoc', 'numero_chrono', 'num_declaration', 'date_declaration', 'fraude', 'date', 'numMY', 'annee', 'administrateur', 'chef'], numChrono: 'None'
+INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0007.docx
+INFO:root:Starting PDF conversion
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0007.docx \u2192 output\Convocation_TR_2026_0007.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0007.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0007.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0007.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+INFO:root:[PDF\u2713] LibreOffice success: output\Convocation_TR_2026_0007.pdf (234531 bytes)
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0007.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0007.docx
+
+2026-05-01 17:55:01 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0007.pdf']
+2026-05-01 17:55:02 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 17:55:21 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 17:55:28 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:55:28 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 17:55:28 [INFO] History retrieval successful: 7 records
+2026-05-01 17:55:29 [INFO] History retrieval successful: 7 records
+2026-05-01 17:55:45 [INFO] [APPROVE] Calculated numero_chrono='723' for entry_id=99
+2026-05-01 17:55:46 [INFO] [APPROVE] Regenerating PDF for entry 99 with chrono 723, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 99 --numChrono 723
+2026-05-01 17:56:04 [INFO] [APPROVE] PDF regenerated successfully for entry 99
+2026-05-01 17:56:04 [INFO] Convocation 99 approved by COULIBALY KARIM with chrono 723
+2026-05-01 17:59:29 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 18:00:00 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0008... for user 480442T
+2026-05-01 18:00:33 [INFO] Generation process returncode: 0
+2026-05-01 18:00:33 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0008.pdf
+
+2026-05-01 18:00:33 [WARNING] Generation stderr: INFO:root:Context keys: ['compte_contribuale', 'societe', 'code_operateur', 'operateur', 'verificateur', 'init_adm', 'initiales', 'num_convoc', 'numero_chrono', 'num_declaration', 'date_declaration', 'fraude', 'date', 'numMY', 'annee', 'administrateur', 'chef'], numChrono: 'None'
+INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0008.docx
+INFO:root:Starting PDF conversion
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0008.docx \u2192 output\Convocation_TR_2026_0008.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0008.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0008.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0008.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0008.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0008.pdf
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0008.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0008.docx
+
+2026-05-01 18:00:33 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0008.pdf']
+2026-05-01 18:00:35 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 18:00:59 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 18:01:11 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:01:11 [INFO] History retrieval successful: 8 records
+2026-05-01 18:01:12 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:01:12 [INFO] History retrieval successful: 8 records
+2026-05-01 18:01:33 [INFO] [APPROVE] Calculated numero_chrono='724' for entry_id=100
+2026-05-01 18:01:34 [INFO] [APPROVE] Regenerating PDF for entry 100 with chrono 724, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 100 --numChrono 724
+2026-05-01 18:02:00 [INFO] [APPROVE] PDF regenerated successfully for entry 100
+2026-05-01 18:02:00 [INFO] Convocation 100 approved by COULIBALY KARIM with chrono 724
+2026-05-01 18:10:35 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 18:10:36 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 18:10:51 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 18:10:53 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 18:11:12 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-01 18:12:03 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0009... for user 480442T
+2026-05-01 18:12:24 [INFO] Generation process returncode: 0
+2026-05-01 18:12:24 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0009.pdf
+
+2026-05-01 18:12:24 [WARNING] Generation stderr: INFO:root:Context keys: ['compte_contribuale', 'societe', 'code_operateur', 'operateur', 'verificateur', 'init_adm', 'initiales', 'num_convoc', 'numero_chrono', 'num_declaration', 'date_declaration', 'fraude', 'date', 'numMY', 'annee', 'administrateur', 'chef'], numChrono: 'None'
+INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0009.docx
+INFO:root:Starting PDF conversion
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0009.docx \u2192 output\Convocation_TR_2026_0009.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0009.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0009.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0009.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0009.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0009.pdf
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0009.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0009.docx
+
+2026-05-01 18:12:24 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0009.pdf']
+2026-05-01 18:12:26 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-01 18:13:17 [INFO] User logged in: 398954D (Administrateur)
+2026-05-01 18:13:24 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:13:24 [INFO] History retrieval successful: 9 records
+2026-05-01 18:13:25 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:13:25 [INFO] History retrieval successful: 9 records
+2026-05-01 18:13:50 [INFO] [APPROVE] Calculated numero_chrono='725' for entry_id=101
+2026-05-01 18:13:50 [INFO] [APPROVE] Regenerating PDF for entry 101 with chrono 725, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 101 --numChrono 725
+2026-05-01 18:14:09 [INFO] [APPROVE] PDF regenerated successfully for entry 101
+2026-05-01 18:14:09 [INFO] Convocation 101 approved by COULIBALY KARIM with chrono 725
+2026-05-01 18:14:53 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 18:14:54 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 18:14:56 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:14:57 [INFO] History retrieval successful: 9 records
+2026-05-01 18:16:14 [INFO] [OK] MySQL database initialized successfully
+2026-05-01 18:16:15 [INFO] Starting server on port 5000 (production: False)
+2026-05-01 18:17:29 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:17:30 [INFO] History retrieval successful: 9 records
+2026-05-01 18:17:46 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:17:47 [INFO] History retrieval successful: 9 records
+2026-05-01 18:17:55 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-01 18:17:55 [INFO] History retrieval successful: 9 records
+2026-05-02 07:50:15 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 07:50:17 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 07:50:29 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 07:50:31 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 07:54:12 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 07:54:13 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 07:54:25 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 07:54:26 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 07:54:43 [INFO] User logged in: info (Administrateur Technique)
+2026-05-02 07:55:41 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 07:56:28 [INFO] Executing command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py generate --num_convoc 0010... for user 480442T
+2026-05-02 07:56:57 [INFO] Generation process returncode: 0
+2026-05-02 07:56:57 [INFO] Generation stdout: OK : output\Convocation_TR_2026_0010.pdf
+
+2026-05-02 07:56:57 [WARNING] Generation stderr: INFO:root:Context keys: ['compte_contribuale', 'societe', 'code_operateur', 'operateur', 'verificateur', 'init_adm', 'initiales', 'num_convoc', 'numero_chrono', 'num_declaration', 'date_declaration', 'fraude', 'date', 'numMY', 'annee', 'administrateur', 'chef'], numChrono: 'None'
+INFO:root:[GENERATE] DOCX template rendered successfully with numChrono=''
+INFO:root:[GENERATE] DOCX file saved successfully: output\Convocation_TR_2026_0010.docx
+INFO:root:Starting PDF conversion
+INFO:root:[PDF] Converting output\Convocation_TR_2026_0010.docx \u2192 output\Convocation_TR_2026_0010.pdf
+INFO:root:[PDF\u2713] LibreOffice found: C:\Program Files\LibreOffice\program\soffice.exe
+INFO:root:[PDF] Using absolute output_dir: C:\app\output | target: Convocation_TR_2026_0010.pdf
+INFO:root:[PDF] DOCX file exists: output\Convocation_TR_2026_0010.docx
+INFO:root:[PDF] Executing command: C:\Program Files\LibreOffice\program\soffice.exe --headless --norestore --convert-to pdf:writer_pdf_Export --outdir C:\app\output output\Convocation_TR_2026_0010.docx
+INFO:root:[PDF] Command exit code: 1
+WARNING:root:[PDF] stderr: Error: source file could not be loaded
+
+ERROR:root:[PDF\u2717] PDF not created: output\Convocation_TR_2026_0010.pdf
+ERROR:root:[PDF\u2717] LO command failed (code 1)
+INFO:root:[PDF\u2713] Word success: output\Convocation_TR_2026_0010.pdf
+INFO:root:[GENERATE] PDF generated successfully: output\Convocation_TR_2026_0010.pdf
+INFO:root:[GENERATE] DOCX removed: output\Convocation_TR_2026_0010.docx
+
+2026-05-02 07:56:57 [INFO] Generated 1 file(s): ['Convocation_TR_2026_0010.pdf']
+2026-05-02 07:56:59 [INFO] PDF generated: 1 file(s) for user 480442T
+2026-05-02 07:57:42 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 07:58:13 [INFO] Convocation submitted for approval: entry_id=103 by user 480442T
+2026-05-02 07:58:41 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 07:58:48 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 07:58:48 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 07:58:48 [INFO] History retrieval successful: 10 records
+2026-05-02 07:58:49 [INFO] History retrieval successful: 10 records
+2026-05-02 07:59:09 [INFO] [APPROVE] Calculated numero_chrono='726' for entry_id=103
+2026-05-02 07:59:09 [INFO] [APPROVE] Regenerating PDF for entry 103 with chrono 726, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 103 --numChrono 726
+2026-05-02 07:59:20 [ERROR] [APPROVE] PDF regeneration failed: INFO:root:[REGENERATE] Starting regeneration for entry_id=103 with numChrono='726'
+ERROR:root:Command failed: No filename found for entry 103
+
+2026-05-02 07:59:20 [INFO] Convocation 103 approved by COULIBALY KARIM with chrono 726
+2026-05-02 07:59:36 [INFO] [APPROVE] Calculated numero_chrono='727' for entry_id=102
+2026-05-02 07:59:36 [INFO] [APPROVE] Regenerating PDF for entry 102 with chrono 727, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 102 --numChrono 727
+2026-05-02 07:59:58 [INFO] [APPROVE] PDF regenerated successfully for entry 102
+2026-05-02 07:59:58 [INFO] Convocation 102 approved by COULIBALY KARIM with chrono 727
+2026-05-02 08:00:38 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 08:00:43 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-02 08:00:43 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-02 08:00:43 [INFO] History retrieval successful: 10 records
+2026-05-02 08:00:44 [INFO] History retrieval successful: 10 records
+2026-05-02 08:02:53 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-02 08:02:53 [INFO] History retrieval successful: 10 records
+2026-05-02 08:04:38 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 08:06:42 [INFO] Convocation submitted for approval: entry_id=104 by user 480442T
+2026-05-02 08:07:06 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 08:07:19 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 08:07:19 [INFO] History retrieval successful: 10 records
+2026-05-02 08:07:20 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 08:07:20 [INFO] History retrieval successful: 10 records
+2026-05-02 08:07:42 [INFO] [APPROVE] Calculated numero_chrono='728' for entry_id=104
+2026-05-02 08:07:43 [INFO] [APPROVE] Regenerating PDF for entry 104 with chrono 728, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 104 --numChrono 728
+2026-05-02 08:07:54 [ERROR] [APPROVE] PDF regeneration failed: INFO:root:[REGENERATE] Starting regeneration for entry_id=104 with numChrono='728'
+ERROR:root:Command failed: No filename found for entry 104
+
+2026-05-02 08:07:54 [INFO] Convocation 104 approved by COULIBALY KARIM with chrono 728
+2026-05-02 08:08:01 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 08:08:01 [INFO] History retrieval successful: 10 records
+2026-05-02 10:07:37 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 10:07:38 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 10:07:56 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 10:07:57 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 10:12:15 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 10:12:16 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 10:12:28 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 10:12:29 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 10:12:43 [INFO] User logged in: info (Administrateur Technique)
+2026-05-02 10:13:40 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 10:14:11 [INFO] Convocation submitted for approval: entry_id=105 by user 480442T
+2026-05-02 10:14:47 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 10:14:54 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-02 10:14:55 [INFO] History retrieval successful: 10 records
+2026-05-02 10:14:55 [INFO] Executing history query for user: 480442T, page: 0, limit: 10
+2026-05-02 10:14:55 [INFO] History retrieval successful: 10 records
+2026-05-02 10:15:24 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 10:15:28 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 10:15:29 [INFO] History retrieval successful: 10 records
+2026-05-02 10:15:29 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 10:15:30 [INFO] History retrieval successful: 10 records
+2026-05-02 10:15:46 [INFO] [APPROVE] Calculated numero_chrono='729' for entry_id=105
+2026-05-02 10:15:46 [INFO] [APPROVE] Regenerating PDF for entry 105 with chrono 729, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 105 --numChrono 729
+2026-05-02 10:16:20 [INFO] [APPROVE] PDF regenerated successfully for entry 105
+2026-05-02 10:16:20 [INFO] Convocation 105 approved by COULIBALY KARIM with chrono 729
+2026-05-02 10:16:27 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 10:16:27 [INFO] History retrieval successful: 10 records
+2026-05-02 10:17:51 [INFO] User logged in: info (Administrateur Technique)
+2026-05-02 10:17:55 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-02 10:17:56 [INFO] History retrieval successful: 10 records
+2026-05-02 10:17:57 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-02 10:17:58 [INFO] History retrieval successful: 10 records
+2026-05-02 10:19:13 [INFO] Executing history query for user: info, page: 0, limit: 10
+2026-05-02 10:19:13 [INFO] History retrieval successful: 10 records
+2026-05-02 10:19:32 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 10:19:33 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 11:48:59 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 11:49:00 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 11:49:10 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 11:49:11 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 11:49:50 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 11:50:15 [INFO] Convocation submitted for approval: entry_id=106 by user 480442T
+2026-05-02 11:50:52 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 11:50:58 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 11:50:59 [INFO] History retrieval successful: 10 records
+2026-05-02 11:50:59 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 11:51:00 [INFO] History retrieval successful: 10 records
+2026-05-02 11:51:17 [INFO] [APPROVE] Calculated numero_chrono='730' for entry_id=106
+2026-05-02 11:51:17 [INFO] [APPROVE] Regenerating PDF for entry 106 with chrono 730, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 106 --numChrono 730
+2026-05-02 11:51:47 [INFO] [APPROVE] PDF regenerated successfully for entry 106
+2026-05-02 11:51:47 [INFO] Convocation 106 approved by COULIBALY KARIM with chrono 730
+2026-05-02 11:51:54 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 11:51:54 [INFO] History retrieval successful: 10 records
+2026-05-02 11:57:43 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 11:57:44 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:04:34 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:04:35 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:05:09 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:05:10 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:05:23 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:05:24 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:05:40 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:05:41 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:09:58 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 12:10:24 [INFO] Convocation submitted for approval: entry_id=107 by user 480442T
+2026-05-02 12:10:53 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 12:10:59 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:10:59 [INFO] History retrieval successful: 10 records
+2026-05-02 12:10:59 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:11:00 [INFO] History retrieval successful: 10 records
+2026-05-02 12:11:15 [INFO] [APPROVE] Calculated numero_chrono='731' for entry_id=107
+2026-05-02 12:11:15 [INFO] [APPROVE] Regenerating PDF for entry 107 with chrono 731, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 107 --numChrono 731
+2026-05-02 12:11:20 [ERROR] [APPROVE] PDF regeneration failed: Traceback (most recent call last):
+  File "C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION_ONLINE\convocation_mysql.py", line 545, in <module>
+    main()
+  File "C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION_ONLINE\convocation_mysql.py", line 531, in main
+    gen = ConvocationGenerator()
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION_ONLINE\convocation_mysql.py", line 26, in __init__
+    import cloudinary
+ModuleNotFoundError: No module named 'cloudinary'
+
+2026-05-02 12:11:20 [INFO] Convocation 107 approved by COULIBALY KARIM with chrono 731
+2026-05-02 12:11:26 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:11:26 [INFO] History retrieval successful: 10 records
+2026-05-02 12:12:54 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:12:55 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:13:28 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 12:13:57 [INFO] Convocation submitted for approval: entry_id=108 by user 480442T
+2026-05-02 12:14:25 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 12:14:33 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:14:34 [INFO] History retrieval successful: 10 records
+2026-05-02 12:14:34 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:14:35 [INFO] History retrieval successful: 10 records
+2026-05-02 12:14:53 [INFO] [APPROVE] Calculated numero_chrono='732' for entry_id=108
+2026-05-02 12:14:53 [INFO] [APPROVE] Regenerating PDF for entry 108 with chrono 732, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 108 --numChrono 732
+2026-05-02 12:15:27 [INFO] [APPROVE] PDF regenerated successfully for entry 108
+2026-05-02 12:15:27 [INFO] Convocation 108 approved by COULIBALY KARIM with chrono 732
+2026-05-02 12:15:33 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:15:33 [INFO] History retrieval successful: 10 records
+2026-05-02 12:15:54 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-02 12:16:03 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-02 12:20:22 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:20:23 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:20:38 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:20:39 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:20:51 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:20:52 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:21:06 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:21:07 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:24:29 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 12:25:05 [INFO] Convocation submitted for approval: entry_id=109 by user 480442T
+2026-05-02 12:25:33 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 12:25:41 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:25:42 [INFO] History retrieval successful: 10 records
+2026-05-02 12:25:42 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:25:42 [INFO] History retrieval successful: 10 records
+2026-05-02 12:25:56 [INFO] [APPROVE] Calculated numero_chrono='733' for entry_id=109
+2026-05-02 12:25:56 [INFO] [APPROVE] Regenerating PDF for entry 109 with chrono 733, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 109 --numChrono 733
+2026-05-02 12:25:57 [ERROR] [APPROVE] PDF regeneration failed:   File "C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION_ONLINE\convocation_mysql.py", line 394
+    try:
+    ^^^
+SyntaxError: expected 'except' or 'finally' block
+
+2026-05-02 12:25:57 [INFO] Convocation 109 approved by COULIBALY KARIM with chrono 733
+2026-05-02 12:28:09 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:28:09 [INFO] History retrieval successful: 10 records
+2026-05-02 12:29:43 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:29:44 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:30:13 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:30:14 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:30:31 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:30:32 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:34:32 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:34:33 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:34:38 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 12:35:03 [INFO] Convocation submitted for approval: entry_id=110 by user 480442T
+2026-05-02 12:35:28 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 12:35:40 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:35:40 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:35:40 [INFO] History retrieval successful: 10 records
+2026-05-02 12:35:40 [INFO] History retrieval successful: 10 records
+2026-05-02 12:36:02 [INFO] [APPROVE] Calculated numero_chrono='734' for entry_id=110
+2026-05-02 12:36:03 [INFO] [APPROVE] Regenerating PDF for entry 110 with chrono 734, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 110 --numChrono 734
+2026-05-02 12:36:04 [ERROR] [APPROVE] PDF regeneration failed:   File "C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION_ONLINE\convocation_mysql.py", line 426
+    except FileNotFoundError as e:
+    ^^^^^^
+SyntaxError: invalid syntax
+
+2026-05-02 12:36:04 [INFO] Convocation 110 approved by COULIBALY KARIM with chrono 734
+2026-05-02 12:36:11 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:36:11 [INFO] History retrieval successful: 10 records
+2026-05-02 12:37:38 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:37:39 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:37:50 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:37:51 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:38:04 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:38:05 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:46:00 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 12:47:20 [INFO] Convocation submitted for approval: entry_id=111 by user 480442T
+2026-05-02 12:47:53 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 12:48:01 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:48:01 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:48:01 [INFO] History retrieval successful: 10 records
+2026-05-02 12:48:02 [INFO] History retrieval successful: 10 records
+2026-05-02 12:48:18 [INFO] [APPROVE] Calculated numero_chrono='735' for entry_id=111
+2026-05-02 12:48:18 [INFO] [APPROVE] Regenerating PDF for entry 111 with chrono 735, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 111 --numChrono 735
+2026-05-02 12:48:45 [INFO] [APPROVE] PDF regenerated successfully for entry 111
+2026-05-02 12:48:45 [INFO] Convocation 111 approved by COULIBALY KARIM with chrono 735
+2026-05-02 12:48:51 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 12:48:51 [INFO] History retrieval successful: 10 records
+2026-05-02 12:49:11 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-02 12:49:19 [ERROR] PDF serving error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-02 12:51:22 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:51:23 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:51:54 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:51:55 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:52:06 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:52:06 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:56:16 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:56:17 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:57:18 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:57:19 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 12:57:29 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 12:57:30 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:38:30 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:38:31 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:39:21 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:39:22 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:39:33 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:39:34 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:39:52 [INFO] User logged in: info (Administrateur Technique)
+2026-05-02 16:41:16 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 16:41:56 [INFO] Convocation submitted for approval: entry_id=112 by user 480442T
+2026-05-02 16:42:25 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 16:42:36 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:42:36 [INFO] History retrieval successful: 10 records
+2026-05-02 16:42:36 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:42:37 [INFO] History retrieval successful: 10 records
+2026-05-02 16:42:53 [INFO] [APPROVE] Calculated numero_chrono='736' for entry_id=112
+2026-05-02 16:42:53 [INFO] [APPROVE] Regenerating PDF for entry 112 with chrono 736, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 112 --numChrono 736
+2026-05-02 16:43:27 [INFO] [APPROVE] PDF regenerated successfully for entry 112
+2026-05-02 16:43:27 [INFO] [APPROVE] Generation stdout: [DEBUG] Loaded env: CLOUD_NAME=dkohn8rjb
+[DEBUG] Cloudinary configured
+[DEBUG] Attempting Cloudinary upload for output\Convocation_TR_2026_0020.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777740205/convocations/convocation_0020_736.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777740205/convocations/convocation_0020_736.pdf
+
+2026-05-02 16:43:27 [INFO] Convocation 112 approved by COULIBALY KARIM with chrono 736
+2026-05-02 16:43:49 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:43:49 [INFO] History retrieval successful: 10 records
+2026-05-02 16:50:46 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:50:47 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:52:10 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:52:11 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:52:23 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 16:52:24 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 16:55:46 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 16:56:19 [INFO] Convocation submitted for approval: entry_id=113 by user 480442T
+2026-05-02 16:57:17 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 16:57:24 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:57:25 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:57:25 [INFO] History retrieval successful: 10 records
+2026-05-02 16:57:25 [INFO] History retrieval successful: 10 records
+2026-05-02 16:57:41 [INFO] [APPROVE] Calculated numero_chrono='737' for entry_id=113
+2026-05-02 16:57:41 [INFO] [APPROVE] Regenerating PDF for entry 113 with chrono 737, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 113 --numChrono 737
+2026-05-02 16:58:13 [INFO] [APPROVE] PDF regenerated successfully for entry 113
+2026-05-02 16:58:13 [INFO] [APPROVE] Generation stdout: [DEBUG] Loaded env: CLOUD_NAME=dkohn8rjb
+[DEBUG] Cloudinary configured
+[DEBUG] Attempting Cloudinary upload for output\Convocation_TR_2026_0021.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777741091/convocations/convocation_0021_737.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777741091/convocations/convocation_0021_737.pdf
+
+2026-05-02 16:58:13 [INFO] Convocation 113 approved by COULIBALY KARIM with chrono 737
+2026-05-02 16:58:20 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 16:58:20 [INFO] History retrieval successful: 10 records
+2026-05-02 17:00:12 [INFO] Redirecting to Cloudinary URL: https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777741091/convocations/convocation_0021_737.pdf
+2026-05-02 17:03:09 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 17:03:09 [INFO] History retrieval successful: 10 records
+2026-05-02 17:37:44 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 17:37:45 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 17:50:55 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 17:50:58 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:18:07 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:18:09 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:18:31 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:18:32 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:19:05 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:20:51 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:20:52 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:21:07 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:21:08 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:26:42 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:26:43 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:27:00 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:27:01 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:31:50 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:31:51 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:32:07 [INFO] [OK] MySQL database initialized successfully
+2026-05-02 18:32:09 [INFO] Starting server on port 5000 (production: False)
+2026-05-02 18:32:10 [INFO] User logged in: 480442T (Vérificateur)
+2026-05-02 18:32:38 [INFO] Convocation submitted for approval: entry_id=114 by user 480442T
+2026-05-02 18:32:57 [INFO] User logged in: 398954D (Administrateur)
+2026-05-02 18:33:04 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 18:33:05 [INFO] History retrieval successful: 10 records
+2026-05-02 18:33:05 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 18:33:05 [INFO] History retrieval successful: 10 records
+2026-05-02 18:33:21 [INFO] [APPROVE] Calculated numero_chrono='738' for entry_id=114
+2026-05-02 18:33:21 [INFO] [APPROVE] Regenerating PDF for entry 114 with chrono 738, command: C:\Users\HP 820 G3\Desktop\DOUANES CI\CONVOCATION\.venv\Scripts\python.exe convocation_mysql.py regenerate --entry_id 114 --numChrono 738
+2026-05-02 18:33:53 [INFO] [APPROVE] PDF regenerated successfully for entry 114
+2026-05-02 18:33:53 [INFO] [APPROVE] Generation stdout: [DEBUG] Loaded env: CLOUD_NAME=dkohn8rjb
+[DEBUG] Cloudinary configured
+[DEBUG] Attempting Cloudinary upload for output\Convocation_TR_2026_0022.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777746831/convocations/convocation_TR-2026-0022.pdf
+OK : https://res.cloudinary.com/dkohn8rjb/raw/upload/v1777746831/convocations/convocation_TR-2026-0022.pdf
+
+2026-05-02 18:33:53 [INFO] Convocation 114 approved by COULIBALY KARIM with chrono 738
+2026-05-02 18:34:10 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 18:34:10 [INFO] History retrieval successful: 10 records
+2026-05-02 18:40:31 [INFO] Executing history query for user: 398954D, page: 0, limit: 10
+2026-05-02 18:40:31 [INFO] History retrieval successful: 10 records

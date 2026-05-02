@@ -10,7 +10,8 @@ const DEFAULT_FILTERS = {
   fraude: '',
   admin: '',
   statut: '',
-  statut_approbation: ''
+  statut_approbation: '',
+  num_declaration: ''
 };
 
 const PAGINATION = {
@@ -24,14 +25,14 @@ const History = ({ user, canViewAll }) => {
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
+  const [chronoInitial, setChronoInitial] = useState('1');
+  const [approvingId, setApprovingId] = useState(null);
 
   const isTechniqueAdmin = user?.grade === 'Administrateur Technique' || user?.role === 'Administrateur Technique';
 
   const isAdministrateur = user?.role === 'Administrateur';
 
   const isVerificateur = user?.role === 'Vérificateur';
-
-  const isChrono = user?.role === 'Chrono';
 
   const isAdmin = !!user?.role; // TOUS ont export/filtres
 
@@ -130,6 +131,24 @@ const History = ({ user, canViewAll }) => {
     }
   }, [user, isTechniqueAdmin, appliedFilters]);
 
+  // Fetch chrono initial value
+  useEffect(() => {
+    const fetchChronoInitial = async () => {
+      if (isTechniqueAdmin) {
+        try {
+          const response = await apiFetch('/api/settings/chrono_initial');
+          if (response.ok) {
+            const data = await response.json();
+            setChronoInitial(data.chrono_initial);
+          }
+        } catch (err) {
+          console.error('Failed to fetch chrono initial:', err);
+        }
+      }
+    };
+    fetchChronoInitial();
+  }, [isTechniqueAdmin]);
+
   const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
@@ -175,6 +194,8 @@ const updateStatus = async (entryId, newStatus) => {
     // eslint-disable-next-line no-restricted-globals
     if (!confirm('Êtes-vous sûr de vouloir approuver cette convocation ?')) return;
 
+    setApprovingId(entryId);
+
     try {
       const response = await apiFetch(`/api/history/${entryId}/approve`, {
         method: 'POST'
@@ -187,15 +208,16 @@ const updateStatus = async (entryId, newStatus) => {
       const result = await response.json();
       alert(result.message);
 
-      setHistory(prev => prev.map(entry =>
-        entry.id === entryId ? { ...entry, statut_approbation: 'APPROUVEE' } : entry
-      ));
+      // Refresh history to get updated filenames after PDF generation
+      await fetchHistory(page, appliedFilters);
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         window.location.reload();
         return;
       }
       alert(err.message);
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -361,6 +383,11 @@ const updateStatus = async (entryId, newStatus) => {
               value={filters.admin}
               onChange={(e) => handleFilterChange('admin', e.target.value)}
             />
+            <input
+              placeholder="Numéro de déclaration"
+              value={filters.num_declaration}
+              onChange={(e) => handleFilterChange('num_declaration', e.target.value)}
+            />
             <select
               value={filters.statut}
               onChange={(e) => handleFilterChange('statut', e.target.value)}
@@ -390,6 +417,45 @@ const updateStatus = async (entryId, newStatus) => {
         </div>
       )}
 
+      {isTechniqueAdmin && (
+        <div className="chrono-settings-section">
+          <h3>Paramètres Chrono</h3>
+          <div className="chrono-settings-grid">
+            <label>
+              Valeur initiale du numéro chrono:
+              <input
+                type="number"
+                value={chronoInitial}
+                onChange={(e) => setChronoInitial(e.target.value)}
+                min="1"
+                className="chrono-initial-input"
+              />
+            </label>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await apiFetch('/api/settings/chrono_initial', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chrono_initial: chronoInitial })
+                  });
+                  if (response.ok) {
+                    alert('Valeur initiale mise à jour avec succès');
+                  } else {
+                    throw new Error('Erreur lors de la mise à jour');
+                  }
+                } catch (err) {
+                  alert(err.message);
+                }
+              }}
+              className="chrono-update-btn"
+            >
+              Mettre à jour
+            </button>
+          </div>
+        </div>
+      )}
+
       {history.length === 0 ? (
         <p className="no-data">Aucune génération trouvée.</p>
       ) : (
@@ -409,8 +475,8 @@ const updateStatus = async (entryId, newStatus) => {
                 <th>Retour CDA</th>
                 <th>Fichiers</th>
                 <th>Statut Approbation</th>
-                {!isVerificateur && !isChrono && <th>Statut</th>}
-                <th>N° Chrono</th>
+                {!isVerificateur && <th>Statut</th>}
+                  <th>Numéro Chrono</th>
                 {isTechniqueAdmin && <th>Actions</th>}
               </tr>
             </thead>
@@ -452,25 +518,38 @@ const updateStatus = async (entryId, newStatus) => {
                     )}
                   </td>
                   <td>
-                    {(entry.filenames || '')
-                      .split(';')
-                      .filter(f => f)
-                      .map((f, i) => (
-                        entry.statut_approbation === 'APPROUVEE' ? (
-                          <button
-                            key={i}
-                            onClick={() => handleDownload(f)}
-                            className="download-link"
-                            title={`Télécharger ${f}`}
-                          >
-                            📄 {f}
-                          </button>
-                        ) : (
-                          <span key={i} className="download-disabled" title="En attente d'approbation">
-                            📄 {f} (Non approuvé)
-                          </span>
-                        )
-                      ))}
+                    {entry.statut_approbation === 'EN_ATTENTE_APPROBATION' ? (
+                      <span className="pending-data">
+                        📋 Données soumises pour approbation
+                      </span>
+                    ) : (
+                      (entry.filenames || '')
+                        .split(';')
+                        .filter(f => f)
+                        .map((f, i) => (
+                          f.startsWith('http') ? (
+                            <a
+                              key={i}
+                              href={f}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="download-link"
+                              title={`Ouvrir le PDF sur Cloudinary`}
+                            >
+                              📄 {f.split('/').pop()}
+                            </a>
+                          ) : (
+                            <button
+                              key={i}
+                              onClick={() => handleDownload(f)}
+                              className="download-link"
+                              title={`Télécharger ${f}`}
+                            >
+                              📄 {f}
+                            </button>
+                          )
+                        ))
+                    )}
                   </td>
                   <td>
                     <span className={`statut-approbation statut-${(entry.statut_approbation || 'EN_ATTENTE_APPROBATION').toLowerCase()}`}>
@@ -479,23 +558,30 @@ const updateStatus = async (entryId, newStatus) => {
                       {entry.statut_approbation === 'REJETEE' && 'Rejetée'}
                     </span>
                     {isAdministrateur && entry.statut_approbation === 'EN_ATTENTE_APPROBATION' && (
-                      <div className="approval-buttons">
-                        <button
-                          className="approve-btn"
-                          onClick={() => approveConvocation(entry.id)}
-                        >
-                          ✓ Approuver
-                        </button>
-                        <button
-                          className="reject-btn"
-                          onClick={() => rejectConvocation(entry.id)}
-                        >
-                          ✗ Rejeter
-                        </button>
-                      </div>
+                      approvingId === entry.id ? (
+                        <div className="approval-progress">
+                          <div className="progress-bar"></div>
+                          <span className="progress-text">Insertion N°Chrono en cours...</span>
+                        </div>
+                      ) : (
+                        <div className="approval-buttons">
+                          <button
+                            className="approve-btn"
+                            onClick={() => approveConvocation(entry.id)}
+                          >
+                            ✓ Approuver
+                          </button>
+                          <button
+                            className="reject-btn"
+                            onClick={() => rejectConvocation(entry.id)}
+                          >
+                            ✗ Rejeter
+                          </button>
+                        </div>
+                      )
                     )}
                   </td>
-                  {!isVerificateur && !isChrono && (
+                  {!isVerificateur && (
                     <td>
                       {isAdministrateur ? (
                         <select
@@ -512,19 +598,9 @@ const updateStatus = async (entryId, newStatus) => {
                       )}
                     </td>
                   )}
-                  <td>
-                    {user?.role === 'Chrono' ? (
-                      <input
-                        type="text"
-                        value={entry.numero_chrono || ''}
-                        onChange={(e) => updateField(entry.id, 'numero_chrono', e.target.value)}
-                        className="chrono-input"
-                        placeholder="N° Chrono"
-                      />
-                    ) : (
-                      <span className="readonly-field">{entry.numero_chrono || '-'}</span>
-                    )}
-                  </td>
+                   <td>
+                     <span className="readonly-field">{entry.numero_chrono || '-'}</span>
+                   </td>
                   {isTechniqueAdmin && (
                     <td>
                       <button

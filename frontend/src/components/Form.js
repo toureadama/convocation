@@ -52,7 +52,7 @@ const setCachedData = (key, data) => {
   }
 };
 
-const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGenerated = false }) => {
+const Form = ({ onGenerate, onSubmit, loading, progress = 0, currentUser, successfullyGenerated = false, userRole }) => {
   const [formData, setFormData] = useState({
     cc: '',
     code_imp: '',
@@ -70,6 +70,7 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
   const [selectedOperateur, setSelectedOperateur] = useState('');
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
   const [isLoadingOperateurs, setIsLoadingOperateurs] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize verifier name from current user (nom + prenom only, no civilite)
   useEffect(() => {
@@ -176,6 +177,16 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
     e.preventDefault();
     onGenerate(formData);
   }, [formData, onGenerate]);
+
+  const handleSubmitForApproval = useCallback(async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData, onSubmit]);
 
   // Reset form après génération réussie (champs vides)
   const resetForm = useCallback(() => {
@@ -328,7 +339,7 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
       {loading && (
         <div className="progress-section">
           <div className="progress-label">
-            Génération en cours... {Math.round(progress)}%
+            Soumission en cours...
           </div>
           <div className="progress-bar">
             <div
@@ -343,13 +354,25 @@ const Form = ({ onGenerate, loading, progress = 0, currentUser, successfullyGene
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading || !isFormValid}
-        className="generate-btn"
-      >
-        {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
-      </button>
+      <div className="button-group">
+        <button
+          type="button"
+          onClick={handleSubmitForApproval}
+          disabled={isSubmitting || !isFormValid}
+          className="submit-btn"
+        >
+          {isSubmitting ? 'Soumission...' : '📋 Soumettre pour Approbation'}
+        </button>
+        {userRole !== 'Vérificateur' && (
+          <button
+            type="submit"
+            disabled={loading || !isFormValid}
+            className="generate-btn"
+          >
+            {loading ? `Génération... ${Math.round(progress)}%` : '🎯 Générer Convocation'}
+          </button>
+        )}
+      </div>
     </form>
   );
 };
