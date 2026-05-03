@@ -44,11 +44,8 @@ services:
       - key: FONTCONFIG_FILE
         value: /etc/fonts/fonts.conf
       - key: CLOUDINARY_CLOUD_NAME
-        value: dkohn8rjb
       - key: CLOUDINARY_API_KEY
-        value: 627145979542462
       - key: CLOUDINARY_API_SECRET
-        value: sgRydI4-BQDXZIcd9u9o7IVNC7w
 
     # Bash handled by Docker CMD
 
