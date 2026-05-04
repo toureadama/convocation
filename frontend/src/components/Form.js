@@ -280,7 +280,7 @@ const Form = ({ onGenerate, onSubmit, loading, progress = 0, currentUser, succes
             value={formData.num_declaration}
             onChange={handleChange}
             required
-            placeholder="Ex: CIAB6C2998"
+            placeholder="Ex: C2998"
           />
         </div>
 
