@@ -52,7 +52,7 @@ const setCachedData = (key, data) => {
   }
 };
 
-const Form = ({ onGenerate, onSubmit, loading, progress = 0, currentUser, successfullyGenerated = false, userRole }) => {
+const Form = ({ onGenerate, onSubmit, loading, progress = 0, currentUser, successfullyGenerated = false, successfullySubmitted = false, onFormReset, userRole }) => {
   const [formData, setFormData] = useState({
     cc: '',
     code_imp: '',
@@ -214,7 +214,16 @@ const Form = ({ onGenerate, onSubmit, loading, progress = 0, currentUser, succes
     }
   }, [successfullyGenerated, loading, resetForm]);
 
-
+  // Auto-reset form 1 second after successful submission (allows user to see confirmation first)
+  useEffect(() => {
+    if (successfullySubmitted && !loading) {
+      const timer = setTimeout(() => {
+        resetForm();
+        onFormReset && onFormReset();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [successfullySubmitted, loading, resetForm, onFormReset]);
 
   return (
     <form onSubmit={handleSubmit} className="form-container">

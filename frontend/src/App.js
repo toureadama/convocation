@@ -34,6 +34,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [successfullySubmitted, setSuccessfullySubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState(TABS.GENERATE);
 
   // Verify token validity on mount and auto-refresh if needed
@@ -146,9 +147,14 @@ function App() {
     }
   };
 
+  const handleFormReset = () => {
+    setSuccessfullySubmitted(false);
+  };
+
   const handleSubmit = async (formData) => {
     setLoading(true);
     setError('');
+    setSuccessfullySubmitted(false);
 
     try {
       const params = new URLSearchParams(formData);
@@ -166,6 +172,7 @@ function App() {
 
       const data = await response.json();
       alert(data.message || 'Convocation soumise pour approbation');
+      setSuccessfullySubmitted(true);
     } catch (err) {
       if (err.message === 'SESSION_EXPIRED') {
         window.location.reload();
@@ -255,14 +262,16 @@ function App() {
         <Suspense fallback={<div className="loading">Chargement...</div>}>
           {canGenerate && activeTab === TABS.GENERATE && (
             <>
-              <Form
-                onGenerate={handleGenerate}
-                onSubmit={handleSubmit}
-                loading={loading}
-                progress={progress}
-                currentUser={user}
-                successfullyGenerated={results.length > 0}
-                userRole={userRole}
+               <Form
+                 onGenerate={handleGenerate}
+                 onSubmit={handleSubmit}
+                 loading={loading}
+                 progress={progress}
+                 currentUser={user}
+                 successfullyGenerated={results.length > 0}
+                 successfullySubmitted={successfullySubmitted}
+                 onFormReset={handleFormReset}
+                 userRole={userRole}
 
               />
               {error && <div className="error">{error}</div>}
