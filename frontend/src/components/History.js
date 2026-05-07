@@ -476,7 +476,6 @@ const updateStatus = async (entryId, newStatus) => {
                 <th>Fichiers</th>
                 <th>Statut Approbation</th>
                 {!isVerificateur && <th>Statut</th>}
-                  <th>Numéro Chrono</th>
                 {isTechniqueAdmin && <th>Actions</th>}
               </tr>
             </thead>
@@ -598,10 +597,7 @@ const updateStatus = async (entryId, newStatus) => {
                       )}
                     </td>
                   )}
-                   <td>
-                     <span className="readonly-field">{entry.numero_chrono || '-'}</span>
-                   </td>
-                  {isTechniqueAdmin && (
+                   {isTechniqueAdmin && (
                     <td>
                       <button
                         onClick={() => handleDelete(entry.id)}
