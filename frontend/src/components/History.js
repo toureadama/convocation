@@ -561,7 +561,7 @@ const updateStatus = async (entryId, newStatus) => {
                       approvingId === entry.id ? (
                         <div className="approval-progress">
                           <div className="progress-bar"></div>
-                          <span className="progress-text">Insertion N°Chrono en cours...</span>
+                          <span className="progress-text">Création convocation en cours...</span>
                         </div>
                       ) : (
                         <div className="approval-buttons">
